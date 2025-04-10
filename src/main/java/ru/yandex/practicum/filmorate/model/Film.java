@@ -17,12 +17,12 @@ public class Film {
     @Size(max = 200, message = "Максимальная длина описания — 200 символов")
     private String description;
 
-    @AfterFilmBirth
+    @AfterFilmBirth(message = "Дата релиза не должна быть раньше 28 декабря 1895 года")
     private LocalDate releaseDate;
 
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     private Integer duration;
 
-    @NotBlank(message = "Название не может быть пустым")
+    @NotBlank(message = "Название фильма не может быть пустым")
     private String name;
 }

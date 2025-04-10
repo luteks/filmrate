@@ -21,7 +21,7 @@ public class User {
     private String email;
 
     @NotBlank(message = "Логин не может быть пустым")
-    @Pattern(regexp = "^[^\\s]+$", message = "Логин не должен содержать пробелы")
+    @Pattern(regexp = "^$|^\\S+$", message = "Логин не должен содержать пробелы")
     private String login;
 
     public User(Long id, String email, String login, String name, LocalDate birthday) {

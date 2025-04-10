@@ -9,6 +9,10 @@ public class AfterFilmBirthValidator implements ConstraintValidator<AfterFilmBir
 
     @Override
     public boolean isValid(LocalDate releaseDate, ConstraintValidatorContext context) {
-        return releaseDate != null && !releaseDate.isBefore(CINEMA_BIRTHDAY);
+        if (releaseDate == null) {
+            return false;
+        }
+
+        return !releaseDate.isBefore(CINEMA_BIRTHDAY);
     }
 }
