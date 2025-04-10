@@ -4,6 +4,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -14,19 +15,22 @@ import static org.junit.jupiter.api.Assertions.*;
 public class FilmTest {
     private final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     private final Validator validator = factory.getValidator();
+    private Film film;
+
+    @BeforeEach
+    void setUp() {
+        film = new Film(1L, "Описание прекрасного фильма", LocalDate.of(2025, 4, 21), 21, "Inception");
+    }
 
     @Test
     public void testValidFilm() {
-        Film film = new Film(1L, "Описание прекрасного фильма", LocalDate.of(2025, 4, 21), 21, "Inception");
-
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertTrue(violations.isEmpty());
     }
 
     @Test
     public void testInvalidFilmName() {
-        Film film = new Film(1L, "Описание пустого фильма", LocalDate.of(2022, 1, 1), 1, "");
-
+        film.setName("");
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty());
         assertEquals("Название фильма не может быть пустым", violations.iterator().next().getMessage());
@@ -39,8 +43,7 @@ public class FilmTest {
 
     @Test
     public void testInvalidFilmDescription() {
-        Film film = new Film(1L, "a".repeat(200), LocalDate.of(2032, 2, 2), 1, "Фильм");
-
+        film.setDescription("a".repeat(200));
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertTrue(violations.isEmpty());
 
@@ -56,8 +59,7 @@ public class FilmTest {
 
     @Test
     public void testInvalidFilmReleaseDate() {
-        Film film = new Film(1L, "a", LocalDate.of(1985, 12, 30), 1, "Фильм");
-
+        film.setReleaseDate(LocalDate.of(1985,12,30));
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertTrue(violations.isEmpty());
 
@@ -73,8 +75,7 @@ public class FilmTest {
 
     @Test
     public void testInvalidFilmDuration() {
-        Film film = new Film(1L, "a", LocalDate.of(1985, 12, 30), -100, "Фильм");
-
+        film.setDuration(-100);
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty());
         assertEquals("Продолжительность фильма должна быть положительным числом", violations.iterator().next().getMessage());

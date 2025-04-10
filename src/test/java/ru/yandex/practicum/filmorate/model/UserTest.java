@@ -4,6 +4,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -14,18 +15,22 @@ import static org.junit.jupiter.api.Assertions.*;
 public class UserTest {
     private final ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
     private final Validator validator = factory.getValidator();
+    private User user;
+
+    @BeforeEach
+    void setUp() {
+        user = new User(1L, "user@test.com", "test", "tester", LocalDate.of(2000, 1, 1));
+    }
 
     @Test
     public void testValidUser() {
-        User user = new User(1L, "user@test.com", "test", "tester", LocalDate.of(2000, 1, 1));
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertTrue(violations.isEmpty());
     }
 
     @Test
     public void testInvalidUserEmail() {
-        User user = new User(1L, "usertest.com", "test", "tester", LocalDate.of(2000, 1, 1));
-
+        user.setEmail("usertest.com");
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
         assertEquals("Электронная почта должна содержать символ @", violations.iterator().next().getMessage());
@@ -43,8 +48,7 @@ public class UserTest {
 
     @Test
     public void testInvalidUserLogin() {
-        User user = new User(1L, "user@test.com", "test er", "tester", LocalDate.of(2000, 1, 1));
-
+        user.setLogin("test er");
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
         assertEquals("Логин не должен содержать пробелы", violations.iterator().next().getMessage());
@@ -62,8 +66,7 @@ public class UserTest {
 
     @Test
     public void testInvalidUserBirthday() {
-        User user = new User(1L, "user@test.com", "tester", "tester", LocalDate.now().plusDays(1));
-
+        user.setBirthday(LocalDate.now().plusDays(1));
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
         assertEquals("Дата рождения не может быть в будущем", violations.iterator().next().getMessage());
