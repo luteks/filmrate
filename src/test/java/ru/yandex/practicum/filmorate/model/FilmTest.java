@@ -87,5 +87,9 @@ public class FilmTest {
         film.setDuration(1);
         violations = validator.validate(film);
         assertTrue(violations.isEmpty());
+
+        film.setDuration(null);
+        violations = validator.validate(film);
+        assertFalse(violations.isEmpty());
     }
 }

@@ -19,16 +19,19 @@ public class FilmController {
     @GetMapping
     public Collection<Film> findAll() {
         log.debug("Film collection {} successful returned.", films.values());
+
         return films.values();
     }
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
         log.debug("Starting film create.");
+
         film.setId(getNextId());
         films.put(film.getId(), film);
 
         log.info("Film {} created.", film);
+
         return film;
     }
 
@@ -38,11 +41,14 @@ public class FilmController {
 
         if (!(films.containsKey(film.getId()))) {
             log.error("Film id not found in collection!");
+
             throw new NotFoundException("Фильм с id " + film.getId() + " не найден");
         }
 
         films.put(film.getId(), film);
+
         log.info("Film with id {} data updated.", film.getId());
+
         return film;
     }
 

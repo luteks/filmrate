@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
@@ -20,6 +21,7 @@ public class Film {
     @AfterFilmBirth(message = "Дата релиза не должна быть раньше 28 декабря 1895 года")
     private LocalDate releaseDate;
 
+    @NotNull
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     private Integer duration;
 

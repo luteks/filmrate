@@ -19,16 +19,19 @@ public class UserController {
     @GetMapping
     public Collection<User> findAll() {
         log.debug("User collection {} successful returned.", users.values());
+
         return users.values();
     }
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
         log.debug("Starting user create");
+
         user.setId(getNextId());
         users.put(user.getId(), user);
 
         log.info("User {} created.", user);
+
         return user;
     }
 
@@ -38,11 +41,14 @@ public class UserController {
 
         if (!users.containsKey(user.getId())) {
             log.error("User id not found in collection!");
+
             throw new NotFoundException("Пользователь с id " + user.getId() + " не найден");
         }
 
         users.put(user.getId(), user);
+
         log.info("User with id {} data updated.", user.getId());
+
         return user;
     }
 

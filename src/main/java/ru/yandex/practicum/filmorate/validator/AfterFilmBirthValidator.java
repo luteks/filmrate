@@ -6,14 +6,10 @@ import jakarta.validation.ConstraintValidatorContext;
 import java.time.LocalDate;
 
 public class AfterFilmBirthValidator implements ConstraintValidator<AfterFilmBirth, LocalDate> {
-    private static final LocalDate CINEMA_BIRTHDAY = LocalDate.of(1895, 12, 28);
+    private static final LocalDate DAY_BEFORE_CINEMA_BIRTH = LocalDate.of(1895, 12, 27);
 
     @Override
     public boolean isValid(LocalDate releaseDate, ConstraintValidatorContext context) {
-        if (releaseDate == null) {
-            return false;
-        }
-
-        return !releaseDate.isBefore(CINEMA_BIRTHDAY);
+        return !(releaseDate == null) && releaseDate.isAfter(DAY_BEFORE_CINEMA_BIRTH);
     }
 }

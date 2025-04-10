@@ -75,5 +75,9 @@ public class UserTest {
         user.setBirthday(LocalDate.now().minusDays(1));
         violations = validator.validate(user);
         assertTrue(violations.isEmpty());
+
+        user.setBirthday(null);
+        violations = validator.validate(user);
+        assertFalse(violations.isEmpty());
     }
 }
