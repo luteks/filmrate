@@ -17,14 +17,14 @@ public class UserTest {
 
     @Test
     public void testValidUser() {
-        User user = new User(1L, "user@test.com", "test", "tester", LocalDate.of(2000,1,1));
+        User user = new User(1L, "user@test.com", "test", "tester", LocalDate.of(2000, 1, 1));
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertTrue(violations.isEmpty());
     }
 
     @Test
     public void testInvalidUserEmail() {
-        User user = new User(1L, "usertest.com", "test", "tester", LocalDate.of(2000,1,1));
+        User user = new User(1L, "usertest.com", "test", "tester", LocalDate.of(2000, 1, 1));
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());
@@ -43,7 +43,7 @@ public class UserTest {
 
     @Test
     public void testInvalidUserLogin() {
-        User user = new User(1L, "user@test.com", "test er", "tester", LocalDate.of(2000,1,1));
+        User user = new User(1L, "user@test.com", "test er", "tester", LocalDate.of(2000, 1, 1));
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty());

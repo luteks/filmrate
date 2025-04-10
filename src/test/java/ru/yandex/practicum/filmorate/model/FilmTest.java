@@ -17,7 +17,7 @@ public class FilmTest {
 
     @Test
     public void testValidFilm() {
-        Film film = new Film(1L,"Описание прекрасного фильма" , LocalDate.of(2025, 4, 21),21, "Inception");
+        Film film = new Film(1L, "Описание прекрасного фильма", LocalDate.of(2025, 4, 21), 21, "Inception");
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertTrue(violations.isEmpty());
@@ -25,7 +25,7 @@ public class FilmTest {
 
     @Test
     public void testInvalidFilmName() {
-        Film film = new Film(1L, "Описание пустого фильма", LocalDate.of(2022,1,1), 1,"");
+        Film film = new Film(1L, "Описание пустого фильма", LocalDate.of(2022, 1, 1), 1, "");
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty());
@@ -39,7 +39,7 @@ public class FilmTest {
 
     @Test
     public void testInvalidFilmDescription() {
-        Film film = new Film(1L, "a".repeat(200), LocalDate.of(2032, 2, 2), 1,"Фильм");
+        Film film = new Film(1L, "a".repeat(200), LocalDate.of(2032, 2, 2), 1, "Фильм");
 
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertTrue(violations.isEmpty());
