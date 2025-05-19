@@ -129,7 +129,7 @@ class FilmControllerTest {
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(film)))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.description").value("Фильм с id " + film.getId() + " не найден"));
+                .andExpect(jsonPath("$.description").value("Фильм с id = " + film.getId() + " не найден"));
 
     }
 

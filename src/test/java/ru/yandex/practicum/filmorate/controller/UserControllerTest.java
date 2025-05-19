@@ -131,7 +131,7 @@ public class UserControllerTest {
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(user)))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.description").value("Юзер с id " + user.getId() + " не найден"));
+                .andExpect(jsonPath("$.description").value("Пользователь с id = " + user.getId() + " не найден"));
     }
 
     @Test

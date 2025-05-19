@@ -88,7 +88,7 @@ public class FilmService {
                 .orElse(0) + 1;
     }
 
-    private Film findByIdFromStorage(long filmId) {
+    private Film findByIdFromStorage(Long filmId) {
         return filmStorage.findById(filmId)
                 .orElseThrow(() -> {
                     log.error("Фильм с id {} не найден", filmId);
