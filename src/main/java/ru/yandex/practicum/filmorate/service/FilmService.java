@@ -22,6 +22,7 @@ public class FilmService {
     public FilmService(UserService userService, FilmStorage filmStorage) {
         this.userService = userService;
         this.filmStorage = filmStorage;
+        log.trace("Зависимости созданы.");
     }
 
     public Film create(Film film) {
@@ -35,13 +36,7 @@ public class FilmService {
     }
 
     public Film update(Film film) {
-        Film oldFilm = filmStorage.getFilms().stream()
-                .filter(f -> f.getId().equals(film.getId()))
-                .findFirst()
-                .orElseThrow(() -> {
-                    log.error("Фильм с id {} не найден", film.getId());
-                    return new NotFoundException("Фильм с id " + film.getId() + " не найден");
-                });
+        Film oldFilm = findByIdFromStorage(film.getId());
 
         film.getMovieRatings().addAll(oldFilm.getMovieRatings());
 
@@ -51,17 +46,18 @@ public class FilmService {
     }
 
     public Film findById(Long filmId) {
-        return filmStorage.findById(filmId)
-                .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
+        log.info("Начат поиск фильма по id.");
+        return findByIdFromStorage(filmId);
+
     }
 
     public Collection<Film> getFilms() {
+        log.info("Возвращение фильма.");
         return filmStorage.getFilms();
     }
 
     public void addLike(Long filmId, Long userId) {
-        Film film = filmStorage.findById(filmId)
-                .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
+        Film film = findByIdFromStorage(filmId);
         User user = userService.findById(userId);
 
         if (film.getMovieRatings().contains(userId)) {
@@ -73,8 +69,7 @@ public class FilmService {
     }
 
     public void deleteLike(Long filmId, Long userId) {
-        Film film = filmStorage.findById(filmId)
-                .orElseThrow(() -> new NotFoundException("Фильм с id = " + filmId + " не найден"));
+        Film film = findByIdFromStorage(filmId);
         User user = userService.findById(userId);
 
         film.getMovieRatings().remove(userId);
@@ -82,10 +77,8 @@ public class FilmService {
     }
 
     public List<Film> getTopFilms(int count) {
-        return filmStorage.getFilms().stream()
-                .sorted(Comparator.comparingInt((Film film) -> film.getMovieRatings().size()).reversed())
-                .limit(count)
-                .toList();
+        log.info("Начато возвращение топа фильмов.");
+        return filmStorage.getTopFilms(count);
     }
 
     private long getNextId() {
@@ -93,5 +86,13 @@ public class FilmService {
                 .mapToLong(Film::getId)
                 .max()
                 .orElse(0) + 1;
+    }
+
+    private Film findByIdFromStorage(long filmId) {
+        return filmStorage.findById(filmId)
+                .orElseThrow(() -> {
+                    log.error("Фильм с id {} не найден", filmId);
+                    return new NotFoundException("Фильм с id = " + filmId + " не найден");
+                });
     }
 }

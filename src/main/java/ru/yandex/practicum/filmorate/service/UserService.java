@@ -20,6 +20,8 @@ public class UserService {
     @Autowired
     public UserService(UserStorage userStorage) {
         this.userStorage = userStorage;
+
+        log.trace("Зависимости созданы.");
     }
 
     public User create(User user) {
@@ -33,13 +35,7 @@ public class UserService {
     }
 
     public User update(User user) {
-        User oldUser = userStorage.getUsers().stream()
-                .filter(u -> u.getId().equals(user.getId()))
-                .findFirst()
-                .orElseThrow(() -> {
-                    log.error("Юзер с id {} не найден", user.getId());
-                    return new NotFoundException("Юзер с id " + user.getId() + " не найден");
-                });
+        User oldUser = findByIdFromStorage(user.getId());
 
         user.getFriends().addAll(oldUser.getFriends());
 
@@ -49,11 +45,12 @@ public class UserService {
     }
 
     public User findById(Long userId) {
-        return userStorage.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
+        log.info("Произведен поиск пользователя в списке.");
+        return findByIdFromStorage(userId);
     }
 
     public Collection<User> getUsers() {
+        log.info("Начато выполнение отправки списка пользователей.");
         return userStorage.getUsers();
     }
 
@@ -62,8 +59,8 @@ public class UserService {
             throw new ValidationException("Нельзя добавить самого себя в друзья");
         }
 
-        User user = findById(userId);
-        User friend = findById(friendId);
+        User user = findByIdFromStorage(userId);
+        User friend = findByIdFromStorage(friendId);
 
         user.getFriends().add(friendId);
         friend.getFriends().add(userId);
@@ -75,8 +72,8 @@ public class UserService {
             throw new ValidationException("Нельзя удалить самого себя из друзей");
         }
 
-        User user = findById(userId);
-        User friend = findById(friendId);
+        User user = findByIdFromStorage(userId);
+        User friend = findByIdFromStorage(friendId);
 
         user.getFriends().remove(friendId);
         friend.getFriends().remove(userId);
@@ -84,8 +81,9 @@ public class UserService {
     }
 
     public List<User> commonFriends(Long userId, Long friendId) {
-        User user = findById(userId);
-        User friend = findById(friendId);
+        log.info("Начато выполнение запроса на поиск общих друзей.");
+        User user = findByIdFromStorage(userId);
+        User friend = findByIdFromStorage(friendId);
 
         return user.getFriends().stream()
                 .filter(friend.getFriends()::contains)
@@ -95,8 +93,8 @@ public class UserService {
     }
 
     public List<User> getFriends(Long userId) {
-        User user = userStorage.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id = " + userId + " не найден"));
+        log.info("Начато выполнение запроса на получение друзей.");
+        User user = findByIdFromStorage(userId);
 
         return user.getFriends().stream()
                 .map(userStorage::findById)
@@ -109,5 +107,13 @@ public class UserService {
                 .mapToLong(User::getId)
                 .max()
                 .orElse(0) + 1;
+    }
+
+    private User findByIdFromStorage(Long userId) {
+        return userStorage.findById(userId)
+                .orElseThrow(() -> {
+                    log.error("Юзер с id {} не найден", userId);
+                    return new NotFoundException("Пользователь с id = " + userId + " не найден");
+                });
     }
 }
