@@ -22,6 +22,7 @@ public class FilmService {
     public FilmService(UserService userService, FilmStorage filmStorage) {
         this.userService = userService;
         this.filmStorage = filmStorage;
+
         log.trace("Зависимости созданы.");
     }
 
@@ -32,6 +33,7 @@ public class FilmService {
 
         filmStorage.create(film);
         log.info("Добавлен новый фильм \"{}\" c id {}", film.getName(), film.getId());
+
         return film;
     }
 
@@ -42,17 +44,19 @@ public class FilmService {
 
         filmStorage.update(film);
         log.info("Фильм c id {} обновлен", film.getId());
+
         return film;
     }
 
     public Film findById(Long filmId) {
         log.info("Начат поиск фильма по id.");
-        return findByIdFromStorage(filmId);
 
+        return findByIdFromStorage(filmId);
     }
 
     public Collection<Film> getFilms() {
         log.info("Возвращение фильма.");
+
         return filmStorage.getFilms();
     }
 
@@ -78,6 +82,7 @@ public class FilmService {
 
     public List<Film> getTopFilms(int count) {
         log.info("Начато возвращение топа фильмов.");
+
         return filmStorage.getTopFilms(count);
     }
 
