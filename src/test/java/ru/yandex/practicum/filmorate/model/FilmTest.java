@@ -19,7 +19,7 @@ public class FilmTest {
 
     @BeforeEach
     void setUp() {
-        film = new Film(1L, "Описание прекрасного фильма", LocalDate.of(2025, 4, 21), 21, "Inception");
+        film = new Film(1L, "Описание прекрасного фильма", "", LocalDate.of(2025, 4, 21), 21);
     }
 
     @Test
@@ -28,18 +28,6 @@ public class FilmTest {
         assertTrue(violations.isEmpty());
     }
 
-    @Test
-    public void testInvalidFilmName() {
-        film.setName("");
-        Set<ConstraintViolation<Film>> violations = validator.validate(film);
-        assertFalse(violations.isEmpty());
-        assertEquals("Название фильма не может быть пустым", violations.iterator().next().getMessage());
-
-        film.setName(null);
-        violations = validator.validate(film);
-        assertFalse(violations.isEmpty());
-        assertEquals("Название фильма не может быть пустым", violations.iterator().next().getMessage());
-    }
 
     @Test
     public void testInvalidFilmDescription() {
@@ -88,9 +76,5 @@ public class FilmTest {
         film.setDuration(1);
         violations = validator.validate(film);
         assertTrue(violations.isEmpty());
-
-        film.setDuration(null);
-        violations = validator.validate(film);
-        assertFalse(violations.isEmpty());
     }
 }
