@@ -1,63 +1,40 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
-@Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private final Map<Long, User> users = new HashMap<>();
+    private final UserService userService;
 
-    @GetMapping
-    public Collection<User> findAll() {
-        log.debug("User collection {} successful returned.", users.values());
-
-        return users.values();
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @PostMapping
     public User create(@Valid @RequestBody User user) {
-        log.debug("Starting user create");
-
-        user.setId(getNextId());
-        users.put(user.getId(), user);
-
-        log.info("User {} created.", user);
-
-        return user;
+        return userService.create(user);
     }
 
     @PutMapping
     public User update(@Valid @RequestBody User user) {
-        log.debug("Starting user update.");
-
-        if (!users.containsKey(user.getId())) {
-            log.error("User id not found in collection!");
-
-            throw new NotFoundException("Пользователь с id " + user.getId() + " не найден");
-        }
-
-        users.put(user.getId(), user);
-
-        log.info("User with id {} data updated.", user.getId());
-
-        return user;
+        return userService.update(user);
     }
 
-    private long getNextId() {
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    @GetMapping("/{id}")
+    public User findById(@PathVariable("id") Long userId) {
+        return userService.findById(userId);
+    }
+
+    @GetMapping
+    public Collection<User> getUsers() {
+        return userService.getUsers();
     }
 }

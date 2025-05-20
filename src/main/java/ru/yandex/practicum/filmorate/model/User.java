@@ -1,29 +1,41 @@
 package ru.yandex.practicum.filmorate.model;
 
 import jakarta.validation.constraints.*;
-import lombok.Data;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
-@Data
+@Getter
+@Setter
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Builder(toBuilder = true)
 public class User {
-    private Long id;
-
-    @NonFinal
-    private String name;
+    Long id;
 
     @NotNull
-    @PastOrPresent(message = "Дата рождения не может быть в будущем")
-    private LocalDate birthday;
+    @NotBlank(message = "Email не должен быть пустым")
+    @Email(message = "Некорректный формат email")
+    String email;
 
-    @Email(message = "Электронная почта должна содержать символ @")
-    @NotBlank(message = "Электронная почта не может быть пустой")
-    private String email;
-
-    @NotBlank(message = "Логин не может быть пустым")
+    @NotNull
+    @NotBlank(message = "Логин не должен быть пустым")
     @Pattern(regexp = "^$|^\\S+$", message = "Логин не должен содержать пробелы")
-    private String login;
+    String login;
+
+    @NonFinal
+    String name;
+
+    @PastOrPresent(message = "Дата рождения не может быть в будущем")
+    LocalDate birthday;
+
+    final Set<Long> friends = new HashSet<>();
 
     public User(Long id, String email, String login, String name, LocalDate birthday) {
         this.id = id;
