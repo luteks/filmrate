@@ -25,10 +25,7 @@ public class UserService {
 
     public User update(User user) {
         findByIdFromStorage(user.getId());
-
-        if (userStorage.isUserExistsWithEmail(user)) {
-            throw new ValidationException("Пользователь с таким e-mail уже существует " + user.getEmail());
-        }
+        validateEmail(user);
 
         userStorage.update(user);
         log.info("Юзер c id {} обновлен", user.getId());
@@ -46,31 +43,28 @@ public class UserService {
     }
 
     public void addFriend(Long userId, Long friendId) {
-        if (userId.equals(friendId)) {
-            throw new ValidationException("Пользователь не может добавить в друзья сам себя " + userId);
-        }
-        User user = findByIdFromStorage(userId);
-        User friend = findByIdFromStorage(friendId);
+        checkYourself(userId, friendId);
+
+        findByIdFromStorage(userId);
+        findByIdFromStorage(friendId);
 
         userStorage.addFriend(userId, friendId);
-        log.info("{} и {} теперь друзья!", user.getName(), friend.getName());
+        log.info("{} и {} теперь друзья!", userId, friendId);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
-        if (userId.equals(friendId)) {
-            throw new ValidationException("Нельзя удалить самого себя из друзей");
-        }
+        checkYourself(userId, friendId);
 
-        User user = findByIdFromStorage(userId);
-        User friend = findByIdFromStorage(friendId);
+        findByIdFromStorage(userId);
+        findByIdFromStorage(friendId);
 
         userStorage.deleteFriend(userId, friendId);
-        log.info("{} и {} больше не друзья!", user.getName(), friend.getName());
+        log.info("{} и {} больше не друзья!", userId, friendId);
     }
 
     public List<User> commonFriends(Long userId, Long friendId) {
-        User user = findByIdFromStorage(userId);
-        User friend = findByIdFromStorage(friendId);
+        findByIdFromStorage(userId);
+        findByIdFromStorage(friendId);
 
         log.debug("Выведены общие друзья пользователей {} и {}", userId, friendId);
 
@@ -78,24 +72,32 @@ public class UserService {
     }
 
     public List<User> getFriends(Long userId) {
-        User user = findByIdFromStorage(userId);
+        findByIdFromStorage(userId);
 
         log.debug("Выведен список друзей пользователя {}", userId);
 
         return userStorage.getFriends(userId).stream().toList();
     }
 
-    private long getNextId() {
-        return userStorage.getUsers().stream()
-                .mapToLong(User::getId)
-                .max()
-                .orElse(0) + 1;
+    private void checkYourself(Long id, long friendId) {
+        if (id.equals(friendId)) {
+            log.error("Пользователь {} не может добавить в друзья сам себя ", id);
+            throw new ValidationException("Пользователь id=" + id + " не может добавить в друзья сам себя ");
+        }
     }
 
     private User findByIdFromStorage(Long userId) {
         if (!userStorage.isUserExists(userId)) {
-            throw new NotFoundException(String.format("Пользователь с Id %s не найден.", userId));
+            log.error("Пользователь с id={} не найден.", userId);
+            throw new NotFoundException(String.format("Пользователь с id=%s не найден.", userId));
         }
         return userStorage.getUserById(userId);
+    }
+
+    private void validateEmail(User user) {
+        if (userStorage.isUserExistsWithEmail(user)) {
+            log.error("Пользователь с таким e-mail={} уже существует ", user.getEmail());
+            throw new ValidationException("Пользователь с таким e-mail уже существует " + user.getEmail());
+        }
     }
 }
