@@ -43,16 +43,23 @@ public class GenreDbStorage implements GenreStorage {
     public boolean isGenreExists(Integer genreId) {
         String sqlQuery = "SELECT COUNT(*) FROM genres WHERE genre_id = :genre_id;";
 
-        return 1 == jdbc.queryForObject(sqlQuery, new MapSqlParameterSource("genre_id", genreId),
+        Integer count = jdbc.queryForObject(sqlQuery, new MapSqlParameterSource("genre_id", genreId),
                 Integer.class);
+
+        return count != null && count == 1;
     }
 
     @Override
     public boolean areGenresExist(List<Integer> genreId) {
-        int genresIdsSize = genreId.size();
-        if (genresIdsSize == 0) return true;
+        if (genreId == null || genreId.isEmpty()) {
+            return true;
+        }
         String sqlQuery = "SELECT COUNT(*) FROM genres WHERE genre_id IN (:genre_id);";
-        return genresIdsSize ==
-                jdbc.queryForObject(sqlQuery, new MapSqlParameterSource("genre_id", genreId), Integer.class);
+
+        Integer count = jdbc.queryForObject(sqlQuery,
+                new MapSqlParameterSource("genre_id", genreId),
+                Integer.class);
+
+        return count != null && count == genreId.size();
     }
 }

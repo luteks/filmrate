@@ -25,10 +25,6 @@ public class FilmService {
     private final GenreStorage genreStorage;
 
     public Film create(Film film) {
-        film = film.toBuilder()
-                .id(getNextId())
-                .build();
-
         if (film.getMpa() != null && !mpaStorage.isMpaExists(film.getMpa().getId())) {
             throw new NotFoundException("Рейтинг фильма не найден " + film.getMpa().getId());
         }
