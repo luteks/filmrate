@@ -18,10 +18,6 @@ public class UserService {
     private final UserStorage userStorage;
 
     public User create(User user) {
-        user = user.toBuilder()
-                .id(getNextId())
-                .build();
-
         userStorage.create(user);
         log.info("Добавлен новый юзер \"{}\" c id {}", user.getLogin(), user.getId());
         return user;
