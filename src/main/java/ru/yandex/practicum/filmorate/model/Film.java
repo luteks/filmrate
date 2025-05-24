@@ -4,21 +4,23 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+
+import lombok.*;
 import lombok.experimental.FieldDefaults;
-import ru.yandex.practicum.filmorate.validator.AfterFilmBirth;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
+import ru.yandex.practicum.filmorate.validator.AfterFilmBirth;
+
 @Data
-@FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder(toBuilder = true)
 @AllArgsConstructor
+@EqualsAndHashCode
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Film {
     Long id;
 
@@ -35,5 +37,18 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     int duration;
 
-    final Set<Long> movieRatings = new HashSet<>();
+    private final Set<Long> likes = new HashSet<>();
+    private Mpa mpa;
+    private final Set<Genre> genres = new HashSet<>();
+
+    public Map<String, Object> toMap() {
+        Map<String, Object> values = new HashMap<>();
+        values.put("film_id", id);
+        values.put("name", name);
+        values.put("description", description);
+        values.put("release_date", releaseDate.toString());
+        values.put("duration", duration);
+        values.put("rating_id", mpa == null ? null : mpa.getId());
+        return values;
+    }
 }

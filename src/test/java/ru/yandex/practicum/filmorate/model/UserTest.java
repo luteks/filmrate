@@ -19,7 +19,12 @@ public class UserTest {
 
     @BeforeEach
     void setUp() {
-        user = new User(1L, "user@test.com", "test", "tester", LocalDate.of(2000, 1, 1));
+        user = User.builder()
+                .email("test@mail.com")
+                .login("username")
+                .name("User Name")
+                .birthday(LocalDate.of(2000, 1, 1))
+                .build();
     }
 
     @Test

@@ -19,7 +19,12 @@ public class FilmTest {
 
     @BeforeEach
     void setUp() {
-        film = new Film(1L, "Описание прекрасного фильма", "", LocalDate.of(2025, 4, 21), 21);
+        film = Film.builder()
+                .name("Interstellar")
+                .description("Great movie")
+                .releaseDate(LocalDate.of(2014, 11, 7))
+                .duration(169)
+                .build();
     }
 
     @Test
