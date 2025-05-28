@@ -11,9 +11,9 @@ import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.MpaStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -75,7 +75,7 @@ public class FilmService {
         List<Film> filmList = filmStorage.getTopFilms(count).stream().toList();
 
         log.info("Отправлен список всех фильмов.");
-        log.debug("{}",filmList);
+        log.debug("{}", filmList);
 
         return filmList;
     }
@@ -116,5 +116,39 @@ public class FilmService {
             log.error("Рейтинг фильма не найден {}", film.getMpa().getId());
             throw new NotFoundException("Рейтинг фильма не найден " + film.getMpa().getId());
         }
+    }
+
+    public List<Film> search(String query, String by) {
+        if (query == null || query.isBlank() || by == null || by.isBlank()) {
+            return getPopularFilms(filmStorage.getFilms());
+        }
+
+        String[] searchBy = by.split(",");
+        Set<Film> foundFilms = new HashSet<>();
+
+        for (String criteria : searchBy) {
+            switch (criteria.trim()) {
+                case "title":
+                    filmStorage.getFilms().stream()
+                            .filter(f -> f.getName().contains(query))
+                            .forEach(foundFilms::add);
+                    break;
+                case "director":
+                    filmStorage.getFilms().stream()
+                            //.filter(f -> f.getDirector().contains(query))
+                            .forEach(foundFilms::add);
+                    break;
+                default:
+                    throw new NotFoundException("Неверные параметры строки запроса: " + criteria);
+            }
+        }
+
+        return getPopularFilms(foundFilms);
+    }
+
+    private List<Film> getPopularFilms(Collection<Film> films) {
+        return films.stream()
+                .sorted(Comparator.comparing(Film::getLikesSize).reversed())
+                .toList();
     }
 }

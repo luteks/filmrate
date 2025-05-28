@@ -4,17 +4,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import ru.yandex.practicum.filmorate.validator.AfterFilmBirth;
 
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import ru.yandex.practicum.filmorate.validator.AfterFilmBirth;
 
 @Data
 @Builder(toBuilder = true)
@@ -50,5 +48,9 @@ public class Film {
         values.put("duration", duration);
         values.put("rating_id", mpa == null ? null : mpa.getId());
         return values;
+    }
+
+    public Integer getLikesSize() {
+        return likes.size();
     }
 }
