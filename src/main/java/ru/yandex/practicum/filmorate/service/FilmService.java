@@ -135,7 +135,7 @@ public class FilmService {
                     break;
                 case "director":
                     filmStorage.getFilms().stream()
-                            //.filter(f -> f.getDirector().contains(query))
+                            .filter(f -> f.getDirector().contains(query))
                             .forEach(foundFilms::add);
                     break;
                 default:
