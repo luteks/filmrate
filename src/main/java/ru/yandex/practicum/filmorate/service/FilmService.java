@@ -132,11 +132,11 @@ public class FilmService {
                             .filter(f -> f.getName().contains(query))
                             .forEach(foundFilms::add);
                     break;
-                case "director":
+                /*case "director":
                     filmStorage.getFilms().stream()
                             .filter(f -> f.getDirector().contains(query))
                             .forEach(foundFilms::add);
-                    break;
+                    break;*/
                 default:
                     throw new NotFoundException("Неверные параметры строки запроса: " + criteria);
             }
