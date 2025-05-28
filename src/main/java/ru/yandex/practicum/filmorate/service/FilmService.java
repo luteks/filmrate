@@ -13,7 +13,6 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
