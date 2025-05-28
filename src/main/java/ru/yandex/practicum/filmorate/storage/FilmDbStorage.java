@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -36,6 +37,7 @@ public class FilmDbStorage implements FilmStorage {
                 .releaseDate(LocalDate.parse(resultSet.getString("release_date")))
                 .duration(resultSet.getInt("duration"))
                 .mpa(new Mpa(resultSet.getInt("rating_id"), resultSet.getString("mpa_rating.name")))
+                .director(new Director(resultSet.getInt("director_id"), resultSet.getString("director_name")))
                 .build();
     }
 
@@ -58,8 +60,8 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film create(Film film) {
         String sql = "INSERT INTO films " +
-                "(name, description, release_date, duration, rating_id)" +
-                "VALUES (:name, :description, :release_date, :duration, :rating_id);";
+                "(name, description, release_date, duration, rating_id, director_id)" +
+                "VALUES (:name, :description, :release_date, :duration, :rating_id, :director_id);";
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(sql, new MapSqlParameterSource(film.toMap()), keyHolder);
         film.setId(keyHolder.getKeyAs(Long.class));
@@ -70,7 +72,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film update(Film newFilm) {
         String sql = "UPDATE films SET name = :name, description = :description, " +
-                "release_date = :release_date, duration = :duration, rating_id = :rating_id " +
+                "release_date = :release_date, duration = :duration, rating_id = :rating_id, director_id = :director_id " +
                 "WHERE film_id = :film_id;";
         jdbc.update(sql, new MapSqlParameterSource(newFilm.toMap()));
         setFilmGenres(newFilm);
@@ -79,11 +81,12 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Collection<Film> getFilms() {
-        String sql = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name " +
+        String sql = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name, d.name AS director_name " +
                 "FROM films AS f " +
                 "LEFT JOIN mpa_rating AS mpa ON f.rating_id = mpa.rating_id " +
                 "LEFT JOIN film_genres AS fg ON f.film_id = fg.film_id " +
                 "LEFT JOIN genres ON fg.genre_id = genres.genre_id " +
+                "LEFT JOIN directors AS d ON f.director_id = d.director_id " +
                 "ORDER BY f.film_id";
 
         return jdbc.query(sql, rs -> {
@@ -110,11 +113,12 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film findById(Long filmId) {
-        String sql = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name " +
+        String sql = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name, d.name AS director_name " +
                 "FROM films AS f " +
                 "LEFT JOIN mpa_rating AS mpa ON f.rating_id = mpa.rating_id " +
                 "LEFT JOIN film_genres AS fg ON f.film_id = fg.film_id " +
                 "LEFT JOIN genres ON fg.genre_id = genres.genre_id " +
+                "LEFT JOIN directors AS d ON f.director_id = d.director_id " +
                 "WHERE f.film_id = :film_id;";
         return jdbc.query(sql, new MapSqlParameterSource("film_id", filmId), rs -> {
             Film film = null;
@@ -149,7 +153,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Collection<Film> getTopFilms(Integer count) {
-        String sql = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name " +
+        String sql = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name, d.name AS director_name " +
                 "FROM (SELECT film_id, COUNT(*) AS countOfLikes " +
                 "FROM likes " +
                 "GROUP BY film_id " +
@@ -158,6 +162,7 @@ public class FilmDbStorage implements FilmStorage {
                 "LEFT JOIN mpa_rating AS mpa ON f.rating_id = mpa.rating_id " +
                 "LEFT JOIN film_genres AS fg ON f.film_id = fg.film_id " +
                 "LEFT JOIN genres ON fg.genre_id = genres.genre_id " +
+                "LEFT JOIN directors AS d ON f.director_id = d.director_id " +
                 "ORDER BY p.countOfLikes DESC, f.film_id;";
 
         return jdbc.query(sql, new MapSqlParameterSource("count", count), rs -> {
