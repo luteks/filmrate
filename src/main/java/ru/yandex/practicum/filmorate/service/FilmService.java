@@ -82,6 +82,12 @@ public class FilmService {
     }
 
     public Collection<Film> getSortedFilmsByDirectorId(int directorId, String sortType) {
+        if ("likes".equals(sortType)) {
+            return getTopFilms(100)
+                    .stream()
+                    .filter(film -> film.getDirector().getId() == directorId)
+                    .toList();
+        }
         return getFilms().stream()
                 .filter(film -> film.getDirector().getId() == directorId)
                 .sorted(new FilmSorter().getComparator(sortType))
