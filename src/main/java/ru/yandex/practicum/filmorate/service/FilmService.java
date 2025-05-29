@@ -83,6 +83,8 @@ public class FilmService {
 
     public Collection<Film> getSortedFilmsByDirectorId(int directorId, String sortType) {
         Collection<Film> films = filmStorage.getFilmsByDirectorId(directorId);
+        log.debug("запрос фильмов режиссера с id{}", directorId);
+        log.debug("тип сортировки {}", sortType);
         if ("likes".equals(sortType)) {
             return getTopFilms(100)
                     .stream()
