@@ -31,6 +31,7 @@ public class DirectorService {
     }
 
     public Director update(Director director) {
+        Director oldDirector = getDirectorById(director.getId());
         log.debug("обновление режиссера{}", director);
         return directorStorage.update(director);
     }

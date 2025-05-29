@@ -85,12 +85,6 @@ public class FilmService {
         Collection<Film> films = filmStorage.getFilmsByDirectorId(directorId);
         log.debug("запрос фильмов режиссера с id{}", directorId);
         log.debug("тип сортировки {}", sortType);
-        if ("likes".equals(sortType)) {
-            return getTopFilms(100)
-                    .stream()
-                    .filter(film -> film.getDirectors().stream().anyMatch(d -> d.getId() == directorId))
-                    .toList();
-        }
         return films.stream()
                 .filter(film -> film.getDirectors().stream().anyMatch(d -> d.getId() == directorId))
                 .sorted(new FilmSorter().getComparator(sortType))

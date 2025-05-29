@@ -66,11 +66,7 @@ public class DirectorDbStorage implements DirectorStorage {
     @Override
     public Director update(Director director) {
         final String UPDATE_QUERY = "UPDATE directors SET name=?";
-        int updatedRows = jdbcTemplate.update(UPDATE_QUERY, director.getName());
-
-        if (updatedRows == 0) {
-            throw new NotFoundException("режиссер с id " + director.getId() + " не найден");
-        }
+        jdbcTemplate.update(UPDATE_QUERY, director.getName());
         return director;
     }
 
