@@ -27,8 +27,13 @@ CREATE TABLE IF NOT EXISTS films (
   description varchar(200) NOT NULL,
   release_date date NOT NULL,
   duration int NOT NULL,
-  rating_id int REFERENCES mpa_rating (rating_id) ON DELETE RESTRICT,
-  director_id int REFERENCES directors(director_id) ON DELETE SET NUll
+  rating_id int REFERENCES mpa_rating (rating_id) ON DELETE RESTRICT
+);
+
+CREATE TABLE IF NOT EXISTS film_directors (
+    film_id  BIGINT NOT NULL REFERENCES films(film_id) ON DELETE CASCADE,
+    director_id INTEGER NOT NULL REFERENCES directors(director_id) ON DELETE CASCADE,
+    PRIMARY KEY(film_id, director_id)
 );
 
 CREATE TABLE IF NOT EXISTS film_genres (

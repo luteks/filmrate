@@ -82,14 +82,15 @@ public class FilmService {
     }
 
     public Collection<Film> getSortedFilmsByDirectorId(int directorId, String sortType) {
+        Collection<Film> films = filmStorage.getFilmsByDirectorId(directorId);
         if ("likes".equals(sortType)) {
             return getTopFilms(100)
                     .stream()
-                    .filter(film -> film.getDirector().getId() == directorId)
+                    .filter(film -> film.getDirectors().stream().anyMatch(d -> d.getId() == directorId))
                     .toList();
         }
-        return getFilms().stream()
-                .filter(film -> film.getDirector().getId() == directorId)
+        return films.stream()
+                .filter(film -> film.getDirectors().stream().anyMatch(d -> d.getId() == directorId))
                 .sorted(new FilmSorter().getComparator(sortType))
                 .toList();
     }

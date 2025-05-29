@@ -22,4 +22,6 @@ public interface FilmStorage {
     void removeLike(Long filmId, Long userId);
 
     boolean isFilmExists(Long filmId);
+
+    Collection<Film> getFilmsByDirectorId(int directorId);
 }

@@ -38,7 +38,7 @@ public class Film {
     private final Set<Long> likes = new HashSet<>();
     private Mpa mpa;
     private final Set<Genre> genres = new HashSet<>();
-    private Director director;
+    private Set<Director> directors;
 
     public Map<String, Object> toMap() {
         Map<String, Object> values = new HashMap<>();
@@ -48,7 +48,6 @@ public class Film {
         values.put("release_date", releaseDate.toString());
         values.put("duration", duration);
         values.put("rating_id", mpa == null ? null : mpa.getId());
-        values.put("director_id", director == null ? null : director.getId());
         return values;
     }
 }
