@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -28,7 +29,7 @@ import java.util.Map;
 public class FilmDbStorage implements FilmStorage {
     private final NamedParameterJdbcOperations jdbc;
 
-    private static Film mapRowToFilm(ResultSet resultSet, int rowNum) throws SQLException {
+    private Film mapRowToFilm(ResultSet resultSet, int rowNum) throws SQLException {
         return Film.builder()
                 .id(resultSet.getLong("film_id"))
                 .name(resultSet.getString("name"))
@@ -161,6 +162,60 @@ public class FilmDbStorage implements FilmStorage {
                 "ORDER BY p.countOfLikes DESC, f.film_id;";
 
         return jdbc.query(sql, new MapSqlParameterSource("count", count), rs -> {
+            Collection<Film> films = new LinkedList<>();
+            Film film = null;
+            while (rs.next()) {
+                if (film == null || !film.getId().equals(rs.getLong("film_id"))) {
+                    if (film != null) {
+                        films.add(film);
+                    }
+                    film = mapRowToFilm(rs, rs.getRow());
+                }
+                Integer genreId = rs.getInt("genre_id");
+                if (!rs.wasNull()) {
+                    film.getGenres().add(new Genre(genreId, rs.getString("genre_name")));
+                }
+            }
+            if (film != null) {
+                films.add(film);
+            }
+            return films;
+        });
+    }
+
+    @Override
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        String sql = """
+                SELECT
+                    f.film_id,
+                    f.name,
+                    f.description,
+                    f.release_date,
+                    f.duration,
+                    f.rating_id,
+                    r.name AS rating_name,
+                    g.genre_id,
+                    g.name AS genre_name,
+                    COUNT(l.user_id) AS likes_count
+                FROM films f
+                JOIN likes l ON f.film_id = l.film_id
+                JOIN mpa_rating r ON f.rating_id = r.rating_id
+                LEFT JOIN film_genres fg ON f.film_id = fg.film_id
+                LEFT JOIN genres g ON fg.genre_id = g.genre_id
+                WHERE f.film_id IN (
+                    SELECT film_id FROM likes WHERE user_id = :user_id
+                    INTERSECT
+                    SELECT film_id FROM likes WHERE user_id = :friend_id
+                )
+                GROUP BY f.film_id, r.name, g.genre_id, g.name
+                ORDER BY likes_count DESC;
+                """;
+
+        MapSqlParameterSource parameterSource = new MapSqlParameterSource();
+        parameterSource.addValue("user_id", userId);
+        parameterSource.addValue("friend_id", friendId);
+
+        return jdbc.query(sql, parameterSource, rs -> {
             Collection<Film> films = new LinkedList<>();
             Film film = null;
             while (rs.next()) {

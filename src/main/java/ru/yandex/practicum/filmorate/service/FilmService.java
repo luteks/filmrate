@@ -80,6 +80,16 @@ public class FilmService {
         return filmList;
     }
 
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        validateUser(userId);
+        validateUser(friendId);
+
+        List<Film> filmList = filmStorage.getCommonFilms(userId, friendId).stream().toList();
+
+        log.info("Отправлен список общих фильмов Пользователя {} и Пользователя {}", userId, friendId);
+        return filmList;
+    }
+
     private Film validateFilm(Long filmId) {
         if (!filmStorage.isFilmExists(filmId)) {
             log.error("Фильм c id:{} не найден", filmId);
