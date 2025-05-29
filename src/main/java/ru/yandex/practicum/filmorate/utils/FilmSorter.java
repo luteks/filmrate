@@ -16,7 +16,7 @@ public class FilmSorter {
     private final Map<SortType, Comparator<Film>> comparatorBySortType = new HashMap<>();
 
     public FilmSorter() {
-        comparatorBySortType.put(SortType.YEAR, Comparator.comparing(Film::getReleaseDate).reversed());
+        comparatorBySortType.put(SortType.YEAR, Comparator.comparing(Film::getReleaseDate));
         comparatorBySortType.put(SortType.LIKES, Comparator.comparingInt((Film film) -> film.getLikes().size()).reversed());
     }
 
