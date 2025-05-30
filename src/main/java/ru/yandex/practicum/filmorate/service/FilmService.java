@@ -132,11 +132,14 @@ public class FilmService {
             switch (criteria.trim().toLowerCase()) {
                 case "title":
                     searchByTitle = true;
+                    log.info("Поиск по названию");
                     break;
                 case "director":
                     searchByDirector = true;
+                    log.info("Поиск по режиссеру");
                     break;
                 default:
+                    log.error("Неверные параметры строки запроса поиска");
                     throw new NotFoundException("Неверные параметры строки запроса: " + criteria);
             }
         }
