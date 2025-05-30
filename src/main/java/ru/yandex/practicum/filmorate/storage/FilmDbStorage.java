@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -16,10 +17,7 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 
 @Repository
 @Primary
@@ -27,6 +25,7 @@ import java.util.Map;
 @Slf4j
 public class FilmDbStorage implements FilmStorage {
     private final NamedParameterJdbcOperations jdbc;
+    private final JdbcTemplate jdbcTemplate;
 
     private static Film mapRowToFilm(ResultSet resultSet, int rowNum) throws SQLException {
         return Film.builder()
@@ -196,5 +195,55 @@ public class FilmDbStorage implements FilmStorage {
     public boolean isFilmExists(Long filmId) {
         String sql = "SELECT COUNT(*) FROM films WHERE film_id = :film_id;";
         return 1 == jdbc.queryForObject(sql, new MapSqlParameterSource("film_id", filmId), Integer.class);
+    }
+
+    @Override
+    public List<Film> searchByTitle(String substring) {
+        String sql = """
+        SELECT f.*, COUNT(l.user_id) AS likes_count
+        FROM films f
+        LEFT JOIN likes l ON f.film_id = l.film_id
+        WHERE LOWER(f.name) LIKE LOWER(?)
+        GROUP BY f.film_id
+        ORDER BY likes_count DESC
+        """;
+
+        return jdbcTemplate.query(sql,
+                FilmDbStorage::mapRowToFilm,
+                "%" + substring + "%");
+    }
+
+    @Override
+    public List<Film> searchByDirector(String substring) {
+        String sql = """
+        SELECT f.*, COUNT(l.user_id) AS likes_count
+        FROM films f
+        LEFT JOIN likes l ON f.film_id = l.film_id
+        WHERE LOWER(f.director) LIKE LOWER(?)
+        GROUP BY f.film_id
+        ORDER BY likes_count DESC
+        """;
+
+        return jdbcTemplate.query(sql,
+                FilmDbStorage::mapRowToFilm,
+                "%" + substring + "%");
+    }
+
+    @Override
+    public List<Film> searchByBoth(String substring) {
+        String sql = """
+        SELECT f.*, COUNT(l.user_id) AS likes_count
+        FROM films f
+        LEFT JOIN likes l ON f.film_id = l.film_id
+        WHERE LOWER(f.name) LIKE LOWER(?) OR LOWER(f.director) LIKE LOWER(?)
+        GROUP BY f.film_id
+        ORDER BY likes_count DESC
+        """;
+
+        String searchPattern = "%" + substring + "%";
+
+        return jdbcTemplate.query(sql,
+                FilmDbStorage::mapRowToFilm,
+                searchPattern, searchPattern);
     }
 }

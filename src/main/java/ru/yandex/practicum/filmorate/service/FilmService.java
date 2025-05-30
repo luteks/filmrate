@@ -11,7 +11,8 @@ import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.MpaStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -119,35 +120,33 @@ public class FilmService {
 
     public List<Film> search(String query, String by) {
         if (query == null || query.isBlank() || by == null || by.isBlank()) {
-            return getPopularFilms(filmStorage.getFilms());
+            return getTopFilms(10);
         }
 
-        String[] searchBy = by.split(",");
-        Set<Film> foundFilms = new HashSet<>();
+        String[] searchCriteria = by.split(",");
 
-        for (String criteria : searchBy) {
-            switch (criteria.trim()) {
+        boolean searchByTitle = false;
+        boolean searchByDirector = false;
+
+        for (String criteria : searchCriteria) {
+            switch (criteria.trim().toLowerCase()) {
                 case "title":
-                    filmStorage.getFilms().stream()
-                            .filter(f -> f.getName().contains(query))
-                            .forEach(foundFilms::add);
+                    searchByTitle = true;
                     break;
-                /*case "director":
-                    filmStorage.getFilms().stream()
-                            .filter(f -> f.getDirector().contains(query))
-                            .forEach(foundFilms::add);
-                    break;*/
+                case "director":
+                    searchByDirector = true;
+                    break;
                 default:
                     throw new NotFoundException("Неверные параметры строки запроса: " + criteria);
             }
         }
 
-        return getPopularFilms(foundFilms);
-    }
-
-    private List<Film> getPopularFilms(Collection<Film> films) {
-        return films.stream()
-                .sorted(Comparator.comparing(Film::getLikesSize).reversed())
-                .toList();
+        if (searchByTitle && searchByDirector) {
+            return filmStorage.searchByBoth(query);
+        } else if (searchByTitle) {
+            return filmStorage.searchByTitle(query);
+        } else if (searchByDirector) {
+            return filmStorage.searchByDirector(query);
+        } else return getTopFilms(10);
     }
 }

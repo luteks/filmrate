@@ -49,8 +49,4 @@ public class Film {
         values.put("rating_id", mpa == null ? null : mpa.getId());
         return values;
     }
-
-    public Integer getLikesSize() {
-        return likes.size();
-    }
 }
