@@ -24,4 +24,6 @@ public interface FilmStorage {
     boolean isFilmExists(Long filmId);
 
     Collection<Film> getFilmsByDirectorId(int directorId);
+
+    Collection<Film> getLikedFilms(long userId);
 }
