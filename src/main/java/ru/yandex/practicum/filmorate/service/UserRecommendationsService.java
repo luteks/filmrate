@@ -27,12 +27,15 @@ public class UserRecommendationsService {
             return Collections.emptyList();
         }
 
-        log.info("понравившиеся фильмы пользователя{}", likedFilms);
+        log.info("понравившиеся фильмы пользователя {}", likedFilms);
         Set<Long> otherLikes = new HashSet<>();
         for (Film likedFilm : likedFilms) {
             otherLikes.addAll(likedFilm.getLikes());
         }
         otherLikes.remove(userId);
+        if (otherLikes.isEmpty()){
+            return Collections.emptyList();
+        }
 
         Map<Long, Integer> commonLikesMap = new HashMap<>();
         Map<Long, Set<Film>> likedFilmsByUserId = new HashMap<>();
