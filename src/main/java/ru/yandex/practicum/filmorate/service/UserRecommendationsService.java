@@ -33,7 +33,7 @@ public class UserRecommendationsService {
             otherLikes.addAll(likedFilm.getLikes());
         }
         otherLikes.remove(userId);
-        if (otherLikes.isEmpty()){
+        if (otherLikes.isEmpty()) {
             return Collections.emptyList();
         }
 
