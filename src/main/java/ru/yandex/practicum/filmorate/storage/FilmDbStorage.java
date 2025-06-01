@@ -148,11 +148,11 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getTopFilms(Integer count, Integer genre_Id, Integer year) {
+    public Collection<Film> getTopFilms(Integer count, Integer genId, Integer year) {
         String sql = """
-        SELECT f.*, 
-               mpa.name AS mpa_rating_name, 
-               g.genre_id, 
+        SELECT f.*,
+               mpa.name AS mpa_rating_name,
+               g.genre_id,
                g.name AS genre_name,
                COUNT(l.user_id) AS likes_count
         FROM films f
@@ -169,7 +169,7 @@ public class FilmDbStorage implements FilmStorage {
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("count", count)
-                .addValue("genreId", genre_Id)
+                .addValue("genreId", genId)
                 .addValue("year", year);
 
         return jdbc.query(sql, params, rs -> {
