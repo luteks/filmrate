@@ -17,7 +17,7 @@ public interface FilmStorage {
 
     void addLikeByUser(Long filmId, Long userId);
 
-    Collection<Film> getTopFilms(Integer count, Integer genreId, Integer year );
+    Collection<Film> getTopFilms(Integer count, Integer genreId, Integer year);
 
     void removeLike(Long filmId, Long userId);
 
