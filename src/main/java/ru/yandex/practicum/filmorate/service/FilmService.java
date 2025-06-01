@@ -73,9 +73,10 @@ public class FilmService {
     }
 
     public List<Film> getTopFilms(int count, Integer genreId, Integer year) {
-        if(count <= 0) {
+        if (count <= 0) {
             throw new ValidationException("Количество должно быть положительным");
         }
+
         List<Film> filmList = filmStorage.getTopFilms(count, genreId, year).stream().toList();
 
         log.info("Отправлен список всех фильмов.");
