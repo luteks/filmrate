@@ -72,7 +72,7 @@ public class FilmService {
         log.info("Пользователь {} удалил лайк фильму \"{}\"", userId, filmId);
     }
 
-    public List<Film> getTopFilms(int count, Integer genreId, Integer year ) {
+    public List<Film> getTopFilms(int count, Integer genreId, Integer year) {
         if(count <= 0) {
             throw new ValidationException("Количество должно быть положительным");
         }
