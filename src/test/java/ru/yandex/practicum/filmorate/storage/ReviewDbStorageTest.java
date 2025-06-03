@@ -51,6 +51,7 @@ public class ReviewDbStorageTest {
         review = Review.builder()
                 .filmId(1L)
                 .userId(1L)
+                .isPositive(Boolean.TRUE)
                 .content("something")
                 .build();
     }
