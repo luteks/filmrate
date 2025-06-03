@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -72,8 +73,12 @@ public class FilmService {
         log.info("Пользователь {} удалил лайк фильму \"{}\"", userId, filmId);
     }
 
-    public List<Film> getTopFilms(int count) {
-        List<Film> filmList = filmStorage.getTopFilms(count).stream().toList();
+    public List<Film> getTopFilms(int count, Integer genreId, Integer year) {
+        if (count <= 0) {
+            throw new ValidationException("Количество должно быть положительным");
+        }
+
+        List<Film> filmList = filmStorage.getTopFilms(count, genreId, year).stream().toList();
 
         log.info("Отправлен список всех фильмов.");
         log.debug("{}", filmList);

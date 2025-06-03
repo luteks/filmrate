@@ -170,18 +170,31 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getTopFilms(Integer count) {
-        String sql = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name " +
-                "FROM (SELECT film_id, COUNT(*) AS countOfLikes " +
-                "FROM likes " + "GROUP BY film_id " +
-                "ORDER BY countOfLikes DESC LIMIT :count) AS p " +
-                "JOIN films AS f ON p.film_id = f.film_id " +
-                "LEFT JOIN mpa_rating AS mpa ON f.rating_id = mpa.rating_id " +
-                "LEFT JOIN film_genres AS fg ON f.film_id = fg.film_id " +
-                "LEFT JOIN genres ON fg.genre_id = genres.genre_id " +
-                "ORDER BY p.countOfLikes DESC, f.film_id;";
+    public Collection<Film> getTopFilms(Integer count, Integer genId, Integer year) {
+        String sql = """
+        SELECT f.*,
+               mpa.name AS mpa_rating_name,
+               g.genre_id,
+               g.name AS genre_name,
+               COUNT(l.user_id) AS likes_count
+        FROM films f
+        LEFT JOIN mpa_rating mpa ON f.rating_id = mpa.rating_id
+        LEFT JOIN film_genres fg ON f.film_id = fg.film_id
+        LEFT JOIN genres g ON fg.genre_id = g.genre_id
+        LEFT JOIN likes l ON f.film_id = l.film_id
+        WHERE (:genreId IS NULL OR fg.genre_id = :genreId)
+          AND (:year IS NULL OR EXTRACT(YEAR FROM f.release_date) = :year)
+        GROUP BY f.film_id, mpa.rating_id, g.genre_id
+        ORDER BY likes_count DESC
+        LIMIT :count
+        """;
 
-        return jdbc.query(sql, new MapSqlParameterSource("count", count), rs -> {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("count", count)
+                .addValue("genreId", genId)
+                .addValue("year", year);
+
+        return jdbc.query(sql, params, rs -> {
             Collection<Film> films = new LinkedList<>();
             Film film = null;
             while (rs.next()) {
