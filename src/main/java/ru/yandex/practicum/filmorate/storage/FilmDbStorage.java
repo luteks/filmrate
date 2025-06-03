@@ -426,6 +426,29 @@ public class FilmDbStorage implements FilmStorage {
             });
         }
 
+        if (!filmMap.isEmpty()) {
+            String genresSql = """
+            SELECT fg.film_id, g.genre_id, g.name
+            FROM film_genres fg
+            JOIN genres g ON fg.genre_id = g.genre_id
+            WHERE fg.film_id IN (%s)
+            """.formatted(
+                    filmMap.keySet().stream()
+                            .map(String::valueOf)
+                            .collect(Collectors.joining(","))
+            );
+
+            jdbcTemplate.query(genresSql, rs -> {
+                Film film = filmMap.get(rs.getLong("film_id"));
+                if (film != null) {
+                    film.getGenres().add(new Genre(
+                            rs.getInt("genre_id"),
+                            rs.getString("name")
+                    ));
+                }
+            });
+        }
+
         films.sort((f1, f2) -> Integer.compare(f2.getLikes().size(), f1.getLikes().size()));
     }
 }
