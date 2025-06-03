@@ -16,7 +16,7 @@ public class Review {
     @NotNull
     @Size(max = 1000)
     private String content;
-
+    @NotNull
     private Boolean isPositive;
 
     @NotNull
@@ -24,26 +24,22 @@ public class Review {
     @NotNull
     private Long filmId;
 
-    private Integer useful;
+    private int useful;
 
     public void addLike() {
         useful++;
-        isPositive = useful > 0;
     }
 
     public void addDislike() {
         useful--;
-        isPositive = useful > 0;
     }
 
     public void removeLike() {
         useful--;
-        isPositive = useful > 0;
     }
 
     public void removeDislike() {
         useful++;
-        isPositive = useful > 0;
     }
 
 }

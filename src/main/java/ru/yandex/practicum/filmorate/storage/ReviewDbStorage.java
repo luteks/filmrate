@@ -35,8 +35,8 @@ public class ReviewDbStorage implements ReviewStorage {
     @Override
     public Review update(Review review) {
         final String UPDATE_QUERY = "UPDATE reviews SET " +
-                "content = ?, user_id =?, film_id =? WHERE review_id=?";
-        jdbcTemplate.update(UPDATE_QUERY, review.getContent(), review.getUserId(), review.getFilmId(), review.getReviewId());
+                "content = ?, is_positive=?, user_id =?, film_id =? WHERE review_id=?";
+        jdbcTemplate.update(UPDATE_QUERY, review.getContent(), review.getIsPositive(), review.getUserId(), review.getFilmId(), review.getReviewId());
         return review;
     }
 
@@ -85,14 +85,15 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Review create(Review review) {
-        final String CREATE_QUERY = "INSERT INTO reviews (content, user_id, film_id) " +
-                "VALUES(?, ?, ?)";
+        final String CREATE_QUERY = "INSERT INTO reviews (content, is_positive, user_id, film_id, useful) " +
+                "VALUES(?, ?, ?, ?, 0)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement preparedStatement = connection.prepareStatement(CREATE_QUERY, Statement.RETURN_GENERATED_KEYS);
             preparedStatement.setString(1, review.getContent());
-            preparedStatement.setLong(2, review.getUserId());
-            preparedStatement.setLong(3, review.getFilmId());
+            preparedStatement.setBoolean(2, review.getIsPositive());
+            preparedStatement.setLong(3, review.getUserId());
+            preparedStatement.setLong(4, review.getFilmId());
             return preparedStatement;
         }, keyHolder);
 
@@ -139,7 +140,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public void updateRating(Review review) {
-        final String UPDATE_RATING_QUERY = "UPDATE reviews SET useful=?, is_positive=? WHERE review_id=?";
-        jdbcTemplate.update(UPDATE_RATING_QUERY, review.getUseful(), review.getIsPositive(), review.getReviewId());
+        final String UPDATE_RATING_QUERY = "UPDATE reviews SET useful=? WHERE review_id=?";
+        jdbcTemplate.update(UPDATE_RATING_QUERY, review.getUseful(), review.getReviewId());
     }
 }
