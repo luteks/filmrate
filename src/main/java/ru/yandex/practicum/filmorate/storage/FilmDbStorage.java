@@ -30,16 +30,15 @@ public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
 
     private static Film mapRowToFilm(ResultSet resultSet, int rowNum) throws SQLException {
-        return Film.builder()
-          .id(resultSet.getLong("film_id"))
-          .name(resultSet.getString("name"))
-          .description(resultSet.getString("description"))
-          .releaseDate(LocalDate.parse(resultSet.getString("release_date")))
-          .duration(resultSet.getInt("duration"))
-          .mpa(new Mpa(resultSet.getInt("rating_id"), resultSet.getString("mpa_rating.name")))
-          .directors(new HashSet<>())
-          .likes(new HashSet<>())
-          .build();
+        return Film.builder().id(resultSet.getLong("film_id"))
+                .name(resultSet.getString("name"))
+                .description(resultSet.getString("description"))
+                .releaseDate(LocalDate.parse(resultSet.getString("release_date")))
+                .duration(resultSet.getInt("duration"))
+                .mpa(new Mpa(resultSet.getInt("rating_id"), resultSet.getString("mpa_rating.name")))
+                .directors(new HashSet<>())
+                .likes(new HashSet<>())
+                .build();
     }
 
     private void setFilmGenres(Film film) {
@@ -103,7 +102,11 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Collection<Film> getFilms() {
-        String sql = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name " + "FROM films AS f " + "LEFT JOIN mpa_rating AS mpa ON f.rating_id = mpa.rating_id " + "LEFT JOIN film_genres AS fg ON f.film_id = fg.film_id " + "LEFT JOIN genres ON fg.genre_id = genres.genre_id " + "ORDER BY f.film_id";
+        String sql = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name " +
+                "FROM films AS f " + "LEFT JOIN mpa_rating AS mpa ON f.rating_id = mpa.rating_id " +
+                "LEFT JOIN film_genres AS fg ON f.film_id = fg.film_id " +
+                "LEFT JOIN genres ON fg.genre_id = genres.genre_id " +
+                "ORDER BY f.film_id";
 
         return jdbc.query(sql, rs -> {
             Collection<Film> films = new LinkedList<>();
@@ -130,7 +133,11 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film findById(Long filmId) {
-        String sql = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name " + "FROM films AS f " + "LEFT JOIN mpa_rating AS mpa ON f.rating_id = mpa.rating_id " + "LEFT JOIN film_genres AS fg ON f.film_id = fg.film_id " + "LEFT JOIN genres ON fg.genre_id = genres.genre_id " + "WHERE f.film_id = :film_id;";
+        String sql = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name " +
+                "FROM films AS f " + "LEFT JOIN mpa_rating AS mpa ON f.rating_id = mpa.rating_id " +
+                "LEFT JOIN film_genres AS fg ON f.film_id = fg.film_id " +
+                "LEFT JOIN genres ON fg.genre_id = genres.genre_id " +
+                "WHERE f.film_id = :film_id;";
         return jdbc.query(sql, new MapSqlParameterSource("film_id", filmId), rs -> {
             Film film = null;
             while (rs.next()) {
@@ -164,7 +171,15 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Collection<Film> getTopFilms(Integer count) {
-        String sql = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name " + "FROM (SELECT film_id, COUNT(*) AS countOfLikes " + "FROM likes " + "GROUP BY film_id " + "ORDER BY countOfLikes DESC LIMIT :count) AS p " + "JOIN films AS f ON p.film_id = f.film_id " + "LEFT JOIN mpa_rating AS mpa ON f.rating_id = mpa.rating_id " + "LEFT JOIN film_genres AS fg ON f.film_id = fg.film_id " + "LEFT JOIN genres ON fg.genre_id = genres.genre_id " + "ORDER BY p.countOfLikes DESC, f.film_id;";
+        String sql = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name " +
+                "FROM (SELECT film_id, COUNT(*) AS countOfLikes " +
+                "FROM likes " + "GROUP BY film_id " +
+                "ORDER BY countOfLikes DESC LIMIT :count) AS p " +
+                "JOIN films AS f ON p.film_id = f.film_id " +
+                "LEFT JOIN mpa_rating AS mpa ON f.rating_id = mpa.rating_id " +
+                "LEFT JOIN film_genres AS fg ON f.film_id = fg.film_id " +
+                "LEFT JOIN genres ON fg.genre_id = genres.genre_id " +
+                "ORDER BY p.countOfLikes DESC, f.film_id;";
 
         return jdbc.query(sql, new MapSqlParameterSource("count", count), rs -> {
             Collection<Film> films = new LinkedList<>();
@@ -251,6 +266,22 @@ public class FilmDbStorage implements FilmStorage {
             loadDirectorsToFilm(film);
         });
         return films;
+    }
+
+    @Override
+    public Collection<Film> getLikedFilms(long userId) {
+        final String FIND_LIKED_FILMS_BY_USER_ID = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name " +
+                "FROM films AS f " + "LEFT JOIN mpa_rating AS mpa ON f.rating_id = mpa.rating_id " +
+                "LEFT JOIN film_genres AS fg ON f.film_id = fg.film_id " +
+                "LEFT JOIN genres ON fg.genre_id = genres.genre_id " +
+                "LEFT JOIN likes AS l ON f.film_id = l.film_id " +
+                "WHERE l.user_id=?";
+        List<Film> likedFilms = jdbcTemplate.query(FIND_LIKED_FILMS_BY_USER_ID, FilmDbStorage::mapRowToFilm, userId);
+        likedFilms.forEach(film -> {
+            loadLikesToFilm(film);
+            loadDirectorsToFilm(film);
+        });
+        return likedFilms;
     }
 
     @Override
