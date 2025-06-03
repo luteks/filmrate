@@ -205,6 +205,58 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
+    public Collection<Film> getCommonFilms(Long userId, Long friendId) {
+        String sql = """
+                SELECT
+                    f.film_id,
+                    f.name,
+                    f.description,
+                    f.release_date,
+                    f.duration,
+                    f.rating_id,
+                    r.name AS rating_name,
+                    g.genre_id,
+                    g.name AS genre_name,
+                    COUNT(l.user_id) AS likes_count
+                FROM films f
+                JOIN likes l ON f.film_id = l.film_id
+                JOIN mpa_rating r ON f.rating_id = r.rating_id
+                LEFT JOIN film_genres fg ON f.film_id = fg.film_id
+                LEFT JOIN genres g ON fg.genre_id = g.genre_id
+                WHERE f.film_id IN (
+                    SELECT film_id FROM likes WHERE user_id = :user_id
+                    INTERSECT
+                    SELECT film_id FROM likes WHERE user_id = :friend_id
+                )
+                GROUP BY f.film_id, r.name, g.genre_id, g.name
+                ORDER BY likes_count DESC;
+                """;
+
+        MapSqlParameterSource parameterSource = new MapSqlParameterSource();
+        parameterSource.addValue("user_id", userId);
+        parameterSource.addValue("friend_id", friendId);
+
+        return jdbc.query(sql, parameterSource, rs -> {
+            Collection<Film> films = new LinkedList<>();
+            Film film = null;
+            while (rs.next()) {
+                if (film == null || !film.getId().equals(rs.getLong("film_id"))) {
+                    if (film != null) {
+                        films.add(film);
+                    }
+                    film = mapRowToFilm(rs, rs.getRow());
+                }
+                Integer genreId = rs.getInt("genre_id");
+                if (!rs.wasNull()) {
+                    film.getGenres().add(new Genre(genreId, rs.getString("genre_name")));
+                }
+            }
+            if (film != null) {
+                films.add(film);
+            }
+            return films;
+        });
+  
     public Collection<Film> getFilmsByDirectorId(int directorId) {
         final String FIND_FILMS_BY_DIRECTOR = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name " + "FROM films AS f " + "LEFT JOIN mpa_rating AS mpa ON f.rating_id = mpa.rating_id " + "LEFT JOIN film_genres AS fg ON f.film_id = fg.film_id " + "LEFT JOIN genres ON fg.genre_id = genres.genre_id " + "LEFT JOIN film_directors AS fd ON fd.film_id = f.film_id " + "WHERE fd.director_id=?";
 
