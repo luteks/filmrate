@@ -146,7 +146,7 @@ public class FilmService {
 
     public List<Film> search(String query, String by) {
         if (query == null || query.isBlank() || by == null || by.isBlank()) {
-            return getTopFilms(10);
+            return getTopFilms(10, null, null);
         }
 
         String[] searchCriteria = by.split(",");
@@ -158,11 +158,11 @@ public class FilmService {
             switch (criteria.trim().toLowerCase()) {
                 case "title":
                     searchByTitle = true;
-                    log.info("Поиск по названию");
+                    log.info("Поиск по названию {}", searchByTitle);
                     break;
                 case "director":
                     searchByDirector = true;
-                    log.info("Поиск по режиссеру");
+                    log.info("Поиск по режиссеру {}", searchByDirector);
                     break;
                 default:
                     log.error("Неверные параметры строки запроса поиска");
@@ -176,6 +176,6 @@ public class FilmService {
             return filmStorage.searchByTitle(query);
         } else if (searchByDirector) {
             return filmStorage.searchByDirector(query);
-        } else return getTopFilms(10);
+        } else return getTopFilms(10, null,null);
     }
 }
