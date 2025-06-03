@@ -80,7 +80,7 @@ public class FilmService {
 
         return filmList;
     }
-  
+
     public List<Film> getCommonFilms(Long userId, Long friendId) {
         validateUser(userId);
         validateUser(friendId);
