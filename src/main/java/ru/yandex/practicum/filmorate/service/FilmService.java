@@ -81,6 +81,16 @@ public class FilmService {
         return filmList;
     }
 
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        validateUser(userId);
+        validateUser(friendId);
+
+        List<Film> filmList = filmStorage.getCommonFilms(userId, friendId).stream().toList();
+
+        log.info("Отправлен список общих фильмов Пользователя {} и Пользователя {}", userId, friendId);
+        return filmList;
+    }
+
     public Collection<Film> getSortedFilmsByDirectorId(int directorId, String sortType) {
         Collection<Film> films = filmStorage.getFilmsByDirectorId(directorId);
         log.debug("запрос фильмов режиссера с id{}", directorId);
@@ -90,7 +100,6 @@ public class FilmService {
                 .sorted(new FilmSorter().getComparator(sortType))
                 .toList();
     }
-
 
     private Film validateFilm(Long filmId) {
         if (!filmStorage.isFilmExists(filmId)) {
