@@ -18,7 +18,9 @@ public interface FilmStorage {
 
     void addLikeByUser(Long filmId, Long userId);
 
-    Collection<Film> getTopFilms(Integer count);
+    Collection<Film> getTopFilms(Integer count, Integer genreId, Integer year);
+
+    Collection<Film> getCommonFilms(Long userId, Long friendId);
 
     void removeLike(Long filmId, Long userId);
 
@@ -29,4 +31,8 @@ public interface FilmStorage {
     List<Film> searchByDirector(String substring);
 
     List<Film> searchByBoth(String substring);
+
+    Collection<Film> getFilmsByDirectorId(int directorId);
+
+    Collection<Film> getLikedFilms(long userId);
 }

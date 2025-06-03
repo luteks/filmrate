@@ -4,12 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.MpaStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.utils.FilmSorter;
 
 import java.util.Collection;
 import java.util.List;
@@ -71,13 +73,37 @@ public class FilmService {
         log.info("Пользователь {} удалил лайк фильму \"{}\"", userId, filmId);
     }
 
-    public List<Film> getTopFilms(int count) {
-        List<Film> filmList = filmStorage.getTopFilms(count).stream().toList();
+    public List<Film> getTopFilms(int count, Integer genreId, Integer year) {
+        if (count <= 0) {
+            throw new ValidationException("Количество должно быть положительным");
+        }
+
+        List<Film> filmList = filmStorage.getTopFilms(count, genreId, year).stream().toList();
 
         log.info("Отправлен список всех фильмов.");
         log.debug("{}", filmList);
 
         return filmList;
+    }
+
+    public List<Film> getCommonFilms(Long userId, Long friendId) {
+        validateUser(userId);
+        validateUser(friendId);
+
+        List<Film> filmList = filmStorage.getCommonFilms(userId, friendId).stream().toList();
+
+        log.info("Отправлен список общих фильмов Пользователя {} и Пользователя {}", userId, friendId);
+        return filmList;
+    }
+
+    public Collection<Film> getSortedFilmsByDirectorId(int directorId, String sortType) {
+        Collection<Film> films = filmStorage.getFilmsByDirectorId(directorId);
+        log.debug("запрос фильмов режиссера с id{}", directorId);
+        log.debug("тип сортировки {}", sortType);
+        return films.stream()
+                .filter(film -> film.getDirectors().stream().anyMatch(d -> d.getId() == directorId))
+                .sorted(new FilmSorter().getComparator(sortType))
+                .toList();
     }
 
     private Film validateFilm(Long filmId) {
