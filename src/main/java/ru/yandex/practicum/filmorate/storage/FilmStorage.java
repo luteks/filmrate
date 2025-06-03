@@ -19,7 +19,13 @@ public interface FilmStorage {
 
     Collection<Film> getTopFilms(Integer count, Integer genreId, Integer year);
 
+    Collection<Film> getCommonFilms(Long userId, Long friendId);
+
     void removeLike(Long filmId, Long userId);
 
     boolean isFilmExists(Long filmId);
+
+    Collection<Film> getFilmsByDirectorId(int directorId);
+
+    Collection<Film> getLikedFilms(long userId);
 }

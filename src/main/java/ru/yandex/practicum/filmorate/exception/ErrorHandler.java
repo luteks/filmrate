@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@Slf4j
 public class ErrorHandler {
 
     @ExceptionHandler
@@ -36,5 +38,12 @@ public class ErrorHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleUnexpectedError(final RuntimeException exception) {
         return new ErrorResponse("Произошла непредвиденная ошибка", exception.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidSortType(final InvalidSortTypeException exception) {
+        log.warn("неверный тип сортировки", exception);
+        return new ErrorResponse("тип сортировки не найден", exception.getMessage());
     }
 }
