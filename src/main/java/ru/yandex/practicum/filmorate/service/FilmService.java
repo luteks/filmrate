@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.MpaStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.utils.FilmSorter;
 
 import java.util.Collection;
 import java.util.List;
@@ -75,11 +76,11 @@ public class FilmService {
         List<Film> filmList = filmStorage.getTopFilms(count).stream().toList();
 
         log.info("Отправлен список всех фильмов.");
-        log.debug("{}",filmList);
+        log.debug("{}", filmList);
 
         return filmList;
     }
-
+  
     public List<Film> getCommonFilms(Long userId, Long friendId) {
         validateUser(userId);
         validateUser(friendId);
@@ -88,6 +89,16 @@ public class FilmService {
 
         log.info("Отправлен список общих фильмов Пользователя {} и Пользователя {}", userId, friendId);
         return filmList;
+    }
+
+    public Collection<Film> getSortedFilmsByDirectorId(int directorId, String sortType) {
+        Collection<Film> films = filmStorage.getFilmsByDirectorId(directorId);
+        log.debug("запрос фильмов режиссера с id{}", directorId);
+        log.debug("тип сортировки {}", sortType);
+        return films.stream()
+                .filter(film -> film.getDirectors().stream().anyMatch(d -> d.getId() == directorId))
+                .sorted(new FilmSorter().getComparator(sortType))
+                .toList();
     }
 
     private Film validateFilm(Long filmId) {
