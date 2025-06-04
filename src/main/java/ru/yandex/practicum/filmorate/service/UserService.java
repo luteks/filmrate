@@ -23,18 +23,22 @@ public class UserService {
     private final FeedStorage feedStorage;
 
     public User create(User user) {
-        userStorage.create(user);
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+        }
+
+        User createdUser = userStorage.create(user);
         log.info("Добавлен новый юзер \"{}\" c id {}", user.getLogin(), user.getId());
-        return user;
+        return createdUser;
     }
 
     public User update(User user) {
         findByIdFromStorage(user.getId());
         validateEmail(user);
 
-        userStorage.update(user);
+        User updatedUser = userStorage.update(user);
         log.info("Юзер c id {} обновлен", user.getId());
-        return user;
+        return updatedUser;
     }
 
     public User findById(Long userId) {

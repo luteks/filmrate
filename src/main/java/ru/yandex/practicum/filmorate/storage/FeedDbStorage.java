@@ -49,7 +49,7 @@ public class FeedDbStorage implements FeedStorage {
     public void addEventToFeed(Long userId, EventType eventType, Operation operation, Long entityId) {
         String sql = """
             INSERT INTO user_event (user_id, event_type, operation, entity_id)
-            VALUES (?, ?, ?, ?)
+            VALUES (:user_id, :event_type, :operation, :entity_id)
             """;
 
         MapSqlParameterSource parameterSource = new MapSqlParameterSource();
