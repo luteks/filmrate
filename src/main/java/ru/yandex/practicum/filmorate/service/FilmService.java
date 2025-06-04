@@ -149,4 +149,39 @@ public class FilmService {
             throw new NotFoundException("Рейтинг фильма не найден " + film.getMpa().getId());
         }
     }
+
+    public List<Film> search(String query, String by) {
+        if (query == null || query.isBlank() || by == null || by.isBlank()) {
+            return getTopFilms(10, null, null);
+        }
+
+        String[] searchCriteria = by.split(",");
+
+        boolean searchByTitle = false;
+        boolean searchByDirector = false;
+
+        for (String criteria : searchCriteria) {
+            switch (criteria.trim().toLowerCase()) {
+                case "title":
+                    searchByTitle = true;
+                    log.info("Поиск по названию {}", searchByTitle);
+                    break;
+                case "director":
+                    searchByDirector = true;
+                    log.info("Поиск по режиссеру {}", searchByDirector);
+                    break;
+                default:
+                    log.error("Неверные параметры строки запроса поиска");
+                    throw new NotFoundException("Неверные параметры строки запроса: " + criteria);
+            }
+        }
+
+        if (searchByTitle && searchByDirector) {
+            return filmStorage.searchByBoth(query);
+        } else if (searchByTitle) {
+            return filmStorage.searchByTitle(query);
+        } else if (searchByDirector) {
+            return filmStorage.searchByDirector(query);
+        } else return getTopFilms(10, null,null);
+    }
 }
