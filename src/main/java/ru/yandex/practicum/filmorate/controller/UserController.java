@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.UserEvent;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
@@ -36,5 +37,10 @@ public class UserController {
     @GetMapping
     public Collection<User> getUsers() {
         return userService.getUsers();
+    }
+
+    @GetMapping("/{id}/feed")
+    public Collection<UserEvent> getFeed(@PathVariable Long id) {
+        return userService.getFeed(id);
     }
 }

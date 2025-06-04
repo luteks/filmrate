@@ -269,7 +269,8 @@ public class FilmDbStorage implements FilmStorage {
             }
             return films;
         });
-  
+    }
+
     public Collection<Film> getFilmsByDirectorId(int directorId) {
         final String FIND_FILMS_BY_DIRECTOR = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name " + "FROM films AS f " + "LEFT JOIN mpa_rating AS mpa ON f.rating_id = mpa.rating_id " + "LEFT JOIN film_genres AS fg ON f.film_id = fg.film_id " + "LEFT JOIN genres ON fg.genre_id = genres.genre_id " + "LEFT JOIN film_directors AS fd ON fd.film_id = f.film_id " + "WHERE fd.director_id=?";
 

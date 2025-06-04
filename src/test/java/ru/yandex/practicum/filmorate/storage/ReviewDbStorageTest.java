@@ -64,7 +64,7 @@ public class ReviewDbStorageTest {
         updatedReview.setContent("newContent");
 
         reviewStorage.update(updatedReview);
-        Optional<Review> newReview = reviewStorage.findById(1);
+        Optional<Review> newReview = reviewStorage.findById(1L);
 
         Assertions.assertTrue(newReview.isPresent());
         Assertions.assertEquals(newReview.get().getContent(), updatedReview.getContent());
@@ -99,33 +99,33 @@ public class ReviewDbStorageTest {
         review2.setContent("newContent");
         reviewStorage.create(review2);
 
-        reviewStorage.delete(1);
+        reviewStorage.delete(1L);
         Assertions.assertEquals(reviewStorage.findAll(10).size(), 1);
     }
 
     @Test
     void addLike_shouldAddLikeToReview() {
         reviewStorage.create(review);
-        reviewStorage.addLike(1, 1L);
-        Assertions.assertEquals(reviewStorage.hasUserRatedTheReview(1, 1L), Boolean.TRUE);
-        Assertions.assertEquals(reviewStorage.getUserRating(1, 1L), Boolean.TRUE);
+        reviewStorage.addLike(1L, 1L);
+        Assertions.assertEquals(reviewStorage.hasUserRatedTheReview(1L, 1L), Boolean.TRUE);
+        Assertions.assertEquals(reviewStorage.getUserRating(1L, 1L), Boolean.TRUE);
     }
 
     @Test
     void addDislike_shouldAddDislikeToReview() {
         reviewStorage.create(review);
-        reviewStorage.addDislike(1, 1L);
-        Assertions.assertEquals(reviewStorage.hasUserRatedTheReview(1, 1L), Boolean.TRUE);
-        Assertions.assertEquals(reviewStorage.getUserRating(1, 1L), Boolean.FALSE);
+        reviewStorage.addDislike(1L, 1L);
+        Assertions.assertEquals(reviewStorage.hasUserRatedTheReview(1L, 1L), Boolean.TRUE);
+        Assertions.assertEquals(reviewStorage.getUserRating(1L, 1L), Boolean.FALSE);
     }
 
     @Test
     void deleteRating_shouldDeleteUsersRate() {
         reviewStorage.create(review);
-        reviewStorage.addDislike(1, 1L);
-        Assertions.assertEquals(reviewStorage.hasUserRatedTheReview(1, 1L), Boolean.TRUE);
-        reviewStorage.deleteRating(1, 1L);
-        Assertions.assertEquals(reviewStorage.hasUserRatedTheReview(1, 1L), Boolean.FALSE);
+        reviewStorage.addDislike(1L, 1L);
+        Assertions.assertEquals(reviewStorage.hasUserRatedTheReview(1L, 1L), Boolean.TRUE);
+        reviewStorage.deleteRating(1L, 1L);
+        Assertions.assertEquals(reviewStorage.hasUserRatedTheReview(1L, 1L), Boolean.FALSE);
     }
 
 
