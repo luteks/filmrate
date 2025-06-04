@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Review {
-    private Integer reviewId;
+    private Long reviewId;
     @NotNull
     @Size(max = 1000)
     private String content;

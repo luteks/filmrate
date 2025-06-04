@@ -23,7 +23,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
     private Review mapRowToReview(ResultSet rs, int rowNum) throws SQLException {
         return Review.builder()
-                .reviewId(rs.getInt("review_id"))
+                .reviewId(rs.getLong("review_id"))
                 .content(rs.getString("content"))
                 .isPositive(rs.getBoolean("is_positive"))
                 .userId(rs.getLong("user_id"))
@@ -54,7 +54,7 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     @Override
-    public Optional<Review> findById(int id) {
+    public Optional<Review> findById(Long id) {
         final String FIND_REVIEW_QUERY = "SELECT review_id, content, is_positive, user_id, film_id, useful FROM reviews " +
                 "WHERE review_id=?";
         Review review;
@@ -78,7 +78,7 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     @Override
-    public void delete(int id) {
+    public void delete(Long id) {
         final String DELETE_QUERY = "DELETE FROM reviews WHERE review_id=?";
         jdbcTemplate.update(DELETE_QUERY, id);
     }
@@ -97,20 +97,20 @@ public class ReviewDbStorage implements ReviewStorage {
             return preparedStatement;
         }, keyHolder);
 
-        int id = keyHolder.getKey().intValue();
+        Long id = keyHolder.getKey().longValue();
         review.setReviewId(id);
 
         return review;
     }
 
     @Override
-    public boolean getUserRating(Integer reviewId, Long userId) {
+    public boolean getUserRating(Long reviewId, Long userId) {
         final String FIND_RATE_QUERY = "SELECT rating FROM review_ratings WHERE review_id=? AND user_id=?";
         return Boolean.TRUE.equals(jdbcTemplate.queryForObject(FIND_RATE_QUERY, Boolean.class, reviewId, userId));
     }
 
     @Override
-    public boolean hasUserRatedTheReview(Integer reviewId, Long userId) {
+    public boolean hasUserRatedTheReview(Long reviewId, Long userId) {
         final String FIND_RATE_QUERY = "SELECT id FROM review_ratings WHERE review_id=? AND user_id=?";
         try {
             jdbcTemplate.queryForObject(FIND_RATE_QUERY, Integer.class, reviewId, userId);
@@ -121,19 +121,19 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     @Override
-    public void deleteRating(Integer reviewId, Long userId) {
+    public void deleteRating(Long reviewId, Long userId) {
         final String DELETE_QUERY = "DELETE FROM review_ratings WHERE review_id=? AND user_id=?";
         jdbcTemplate.update(DELETE_QUERY, reviewId, userId);
     }
 
     @Override
-    public void addLike(Integer reviewId, Long userId) {
+    public void addLike(Long reviewId, Long userId) {
         final String ADD_LIKE_QUERY = "INSERT INTO review_ratings (user_id, review_id, rating) VALUES (?, ?, TRUE)";
         jdbcTemplate.update(ADD_LIKE_QUERY, userId, reviewId);
     }
 
     @Override
-    public void addDislike(Integer reviewId, Long userId) {
+    public void addDislike(Long reviewId, Long userId) {
         final String ADD_DISLIKE_QUERY = "INSERT INTO review_ratings (user_id, review_id, rating) VALUES (?, ?, FALSE)";
         jdbcTemplate.update(ADD_DISLIKE_QUERY, userId, reviewId);
     }

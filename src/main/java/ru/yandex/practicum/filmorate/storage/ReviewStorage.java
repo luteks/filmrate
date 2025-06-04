@@ -10,23 +10,23 @@ public interface ReviewStorage {
 
     Review update(Review review);
 
-    void delete(int id);
+    void delete(Long id);
 
-    Optional<Review> findById(int id);
+    Optional<Review> findById(Long id);
 
     Collection<Review> findAll(int limit);
 
     Collection<Review> findReviewsByFilmId(Long filmId, int limit);
 
-    boolean hasUserRatedTheReview(Integer reviewId, Long userId);
+    boolean hasUserRatedTheReview(Long reviewId, Long userId);
 
-    boolean getUserRating(Integer reviewId, Long userId);
+    boolean getUserRating(Long reviewId, Long userId);
 
-    void addLike(Integer reviewId, Long userId);
+    void addLike(Long reviewId, Long userId);
 
-    void addDislike(Integer reviewId, Long userId);
+    void addDislike(Long reviewId, Long userId);
 
-    void deleteRating(Integer reviewId, Long userId);
+    void deleteRating(Long reviewId, Long userId);
 
     void updateRating(Review review);
 }
