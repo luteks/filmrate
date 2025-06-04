@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.storage;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.stereotype.Repository;
@@ -12,17 +11,13 @@ import ru.yandex.practicum.filmorate.model.UserEvent;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.Optional;
 
 @Repository
 @Primary
 @RequiredArgsConstructor
 public class FeedDbStorage implements FeedStorage {
     private final NamedParameterJdbcOperations jdbc;
-    private final JdbcTemplate jdbcTemplate;
 
     private static UserEvent mapRowToUserEvent(ResultSet resultSet, int rowNum) throws SQLException {
         return UserEvent.builder()
