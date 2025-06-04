@@ -3,14 +3,13 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.enums.EventType;
+import ru.yandex.practicum.filmorate.enums.Operation;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.GenreStorage;
-import ru.yandex.practicum.filmorate.storage.MpaStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.*;
 import ru.yandex.practicum.filmorate.utils.FilmSorter;
 
 import java.util.Collection;
@@ -25,6 +24,7 @@ public class FilmService {
     private final UserStorage userStorage;
     private final MpaStorage mpaStorage;
     private final GenreStorage genreStorage;
+    private final FeedStorage feedStorage;
 
     public Film create(Film film) {
         validateMpa(film);
@@ -64,6 +64,9 @@ public class FilmService {
         validateUser(userId);
         filmStorage.addLikeByUser(filmId, userId);
         log.info("Пользователь {} поставил лайк фильму \"{}\"", userId, filmId);
+
+        feedStorage.addEventToFeed(userId, EventType.LIKE, Operation.ADD, filmId);
+        log.info("Событие добавлено в ленту: пользователь с id: {} лайкнул фильм с id: {}", userId, filmId);
     }
 
     public void deleteLike(Long filmId, Long userId) {
@@ -71,6 +74,9 @@ public class FilmService {
         validateUser(userId);
         filmStorage.removeLike(filmId, userId);
         log.info("Пользователь {} удалил лайк фильму \"{}\"", userId, filmId);
+
+        feedStorage.addEventToFeed(userId, EventType.LIKE, Operation.REMOVE, filmId);
+        log.info("Событие добавлено в ленту: пользователь с id: {} удалил лайк у фильма с id: {}", userId, filmId);
     }
 
     public List<Film> getTopFilms(int count, Integer genreId, Integer year) {

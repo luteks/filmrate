@@ -3,19 +3,25 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.enums.EventType;
+import ru.yandex.practicum.filmorate.enums.Operation;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.UserEvent;
+import ru.yandex.practicum.filmorate.storage.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
+    private final FeedStorage feedStorage;
 
     public User create(User user) {
         userStorage.create(user);
@@ -50,6 +56,10 @@ public class UserService {
 
         userStorage.addFriend(userId, friendId);
         log.info("{} и {} теперь друзья!", userId, friendId);
+
+        feedStorage.addEventToFeed(userId, EventType.FRIEND, Operation.ADD, friendId);
+        log.info("Событие добавлено в ленту: пользовател с id: {} добавил друга с id: {}", userId, friendId);
+
     }
 
     public void deleteFriend(Long userId, Long friendId) {
@@ -60,6 +70,9 @@ public class UserService {
 
         userStorage.deleteFriend(userId, friendId);
         log.info("{} и {} больше не друзья!", userId, friendId);
+
+        feedStorage.addEventToFeed(userId, EventType.FRIEND, Operation.REMOVE, friendId);
+        log.info("Событие добавлено в ленту: пользовател с id: {} удалил друга с id: {}", userId, friendId);
     }
 
     public List<User> commonFriends(Long userId, Long friendId) {
@@ -99,5 +112,12 @@ public class UserService {
             log.error("Пользователь с таким e-mail={} уже существует ", user.getEmail());
             throw new ValidationException("Пользователь с таким e-mail уже существует " + user.getEmail());
         }
+    }
+
+    public List<UserEvent> getFeed(Long userId) {
+        findByIdFromStorage(userId);
+
+        log.info("Получена лента событий пользователя с id: {}", userId);
+        return feedStorage.getFeed(userId).stream().toList();
     }
 }
