@@ -32,13 +32,13 @@ CREATE TABLE IF NOT EXISTS films (
 
 CREATE TABLE IF NOT EXISTS film_directors (
     film_id  BIGINT NOT NULL REFERENCES films(film_id) ON DELETE CASCADE,
-    director_id INTEGER NOT NULL REFERENCES directors(director_id) ON DELETE CASCADE,
+    director_id INTEGER NOT NULL REFERENCES directors(director_id),
     PRIMARY KEY(film_id, director_id)
 );
 
 CREATE TABLE IF NOT EXISTS film_genres (
   film_id bigint REFERENCES films (film_id) ON DELETE CASCADE,
-  genre_id int REFERENCES genres (genre_id) ON DELETE RESTRICT,
+  genre_id int REFERENCES genres (genre_id),
   PRIMARY KEY (film_id, genre_id)
 );
 
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS user_event (
     operation VARCHAR(10) NOT NULL,
     entity_id BIGINT NOT NULL,
     timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 

@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 
 @Repository
@@ -38,7 +39,7 @@ public class UserDbStorage implements UserStorage {
                 "VALUES (:email, :login, :name, :birthday);";
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(sqlQuery, new MapSqlParameterSource(user.toMap()), keyHolder);
-        user.setId(keyHolder.getKeyAs(Long.class));
+        user.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
         return user;
     }
 

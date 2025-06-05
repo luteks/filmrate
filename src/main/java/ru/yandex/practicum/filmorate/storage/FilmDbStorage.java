@@ -84,7 +84,7 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "INSERT INTO films " + "(name, description, release_date, duration, rating_id)" + "VALUES (:name, :description, :release_date, :duration, :rating_id);";
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(sql, new MapSqlParameterSource(film.toMap()), keyHolder);
-        film.setId(keyHolder.getKeyAs(Long.class));
+        film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
         setFilmGenres(film);
         setFilmDirectors(film);
         loadDirectorsToFilm(film);
@@ -156,14 +156,14 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void delete(Long filmId) {
-        deleteRelated(Optional.of(filmId));
+        //deleteRelated(Optional.of(filmId));
         String sql = "DELETE FROM films WHERE film_id = :film_id;";
         jdbc.update(sql, new MapSqlParameterSource("film_id", filmId));
     }
 
     @Override
     public void deleteAll() {
-        deleteRelated(Optional.empty());
+       // deleteRelated(Optional.empty());
         String sql = "DELETE FROM films";
         jdbcTemplate.update(sql);
     }
