@@ -43,7 +43,7 @@ public class FilmDbStorage implements FilmStorage {
                 .build();
     }
 
-    private Film setFilmGenres(Film film) {
+    private void setFilmGenres(Film film) {
         String sql = "DELETE FROM film_genres WHERE film_id = :film_id;";
         jdbc.update(sql, new MapSqlParameterSource("film_id", film.getId()));
 
@@ -55,7 +55,6 @@ public class FilmDbStorage implements FilmStorage {
             return par;
         }).toList());
         jdbc.batchUpdate(sql, batchParams);
-        return film;
     }
 
     private void setFilmDirectors(Film film) {
@@ -86,7 +85,7 @@ public class FilmDbStorage implements FilmStorage {
         GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
         jdbc.update(sql, new MapSqlParameterSource(film.toMap()), keyHolder);
         film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
-        film = setFilmGenres(film);
+        setFilmGenres(film);
         setFilmDirectors(film);
         loadDirectorsToFilm(film);
         return film;
