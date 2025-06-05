@@ -79,4 +79,12 @@ public class DirectorDbStorage implements DirectorStorage {
             throw new NotFoundException("режиссер с id " + id + " не найден");
         }
     }
+
+    @Override
+    public void deleteAll() {
+        final String DELETE_ALL = "DELETE FROM directors";
+
+        jdbcTemplate.update(DELETE_ALL);
+    }
+
 }

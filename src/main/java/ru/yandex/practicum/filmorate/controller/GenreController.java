@@ -1,10 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.service.GenreService;
 
@@ -22,7 +19,17 @@ public class GenreController {
     }
 
     @GetMapping("/{id}")
-    public Genre get(@PathVariable("id") int userId) {
+    public Genre get(@PathVariable("id") Long userId) {
         return genreService.getGenre(userId);
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Long id) {
+        genreService.delete(id);
+    }
+
+    @DeleteMapping
+    public void deleteAll() {
+        genreService.deleteAll();
     }
 }

@@ -6,11 +6,15 @@ import java.util.Collection;
 import java.util.List;
 
 public interface GenreStorage {
-    Genre getGenreById(Integer genreId);
+    Genre getGenreById(Long genreId);
 
     Collection<Genre> findAll();
 
-    boolean isGenreExists(Integer genreId);
+    boolean isGenreExists(Long genreId);
 
-    boolean areGenresExist(List<Integer> genreIds);
+    boolean areGenresExist(List<Long> genreIds);
+
+    void delete(Long id);
+
+    void deleteAll();
 }

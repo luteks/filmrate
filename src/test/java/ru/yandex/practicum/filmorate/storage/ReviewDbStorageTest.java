@@ -45,7 +45,7 @@ public class ReviewDbStorageTest {
                 .description("Test description")
                 .releaseDate(LocalDate.parse("1980-05-21"))
                 .duration(100)
-                .mpa(new Mpa(1, "G"))
+                .mpa(new Mpa(1L, "G"))
                 .build());
 
         review = Review.builder()

@@ -46,5 +46,9 @@ public class DirectorService {
         return directorStorage.findById(id).orElseThrow(() -> new NotFoundException("режиссер с id " + id + " не найден"));
     }
 
+    public void deleteAll() {
 
+        directorStorage.deleteAll();
+        log.info("Таблица director была очищена");
+    }
 }
