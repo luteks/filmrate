@@ -73,11 +73,14 @@ public class FilmDbStorage implements FilmStorage {
         film.setDirectors(directors);
 
         final String FIND_GENRES_BY_FILM_QUERY = """
-            SELECT g.id, g.name FROM genre g JOIN film_genre fg
-            ON g.id = fg.genre_id WHERE fg.film_id = ? ORDER BY g.id ASC
+                SELECT g.genre_id, g.name
+                FROM genres g
+                JOIN film_genres fg ON g.genre_id = fg.genre_id
+                WHERE fg.film_id = ?
+                ORDER BY g.genre_id ASC;
             """;
         Set<Genre> genres = new HashSet<>(jdbcTemplate.query(FIND_GENRES_BY_FILM_QUERY, (rs, rowNum) -> new Genre(rs.getLong("genre_id"), rs.getString("name")), film.getId()));
-        film.setGenres(genres);
+        film.addGenres(genres);
     }
 
     private void loadLikesToFilm(Film film) {

@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.validator.AfterFilmBirth;
 
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,7 +37,7 @@ public class Film {
 
     private Set<Long> likes;
     private Mpa mpa;
-    private Set<Genre> genres;
+    private final Set<Genre> genres = new HashSet<>();
     private Set<Director> directors;
 
     public Map<String, Object> toMap() {
@@ -48,5 +49,10 @@ public class Film {
         values.put("duration", duration);
         values.put("rating_id", mpa == null ? null : mpa.getId());
         return values;
+    }
+
+    public void addGenres(Set<Genre> genres) {
+        this.genres.clear();
+        this.genres.addAll(genres);
     }
 }
