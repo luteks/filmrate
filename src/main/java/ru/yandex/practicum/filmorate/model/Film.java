@@ -37,7 +37,7 @@ public class Film {
 
     private Set<Long> likes;
     private Mpa mpa;
-    private final Set<Genre> genres = new HashSet<>();
+    private Set<Genre> genres;
     private Set<Director> directors;
 
     public Map<String, Object> toMap() {

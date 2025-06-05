@@ -67,10 +67,17 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-    private void loadDirectorsToFilm(Film film) {
+    private void loadDirectorsAndGenresToFilm(Film film) {
         final String FIND_FILM_DIRECTORS = "SELECT d.director_id, d.name " + "FROM film_directors AS fd " + "JOIN directors AS d ON fd.director_id = d.director_id " + "WHERE fd.film_id=?";
         Set<Director> directors = new HashSet<>(jdbcTemplate.query(FIND_FILM_DIRECTORS, (rs, rowNum) -> new Director(rs.getInt("director_id"), rs.getString("name")), film.getId()));
         film.setDirectors(directors);
+
+        final String FIND_GENRES_BY_FILM_QUERY = """
+            SELECT g.id, g.name FROM genre g JOIN film_genre fg
+            ON g.id = fg.genre_id WHERE fg.film_id = ? ORDER BY g.id ASC
+            """;
+        Set<Genre> genres = new HashSet<>(jdbcTemplate.query(FIND_GENRES_BY_FILM_QUERY, (rs, rowNum) -> new Genre(rs.getLong("genre_id"), rs.getString("name")), film.getId()));
+        film.setGenres(genres);
     }
 
     private void loadLikesToFilm(Film film) {
@@ -87,7 +94,7 @@ public class FilmDbStorage implements FilmStorage {
         film.setId(Objects.requireNonNull(keyHolder.getKey()).longValue());
         setFilmGenres(film);
         setFilmDirectors(film);
-        loadDirectorsToFilm(film);
+        loadDirectorsAndGenresToFilm(film);
         return film;
     }
 
@@ -97,7 +104,7 @@ public class FilmDbStorage implements FilmStorage {
         jdbc.update(sql, new MapSqlParameterSource(newFilm.toMap()));
         setFilmGenres(newFilm);
         setFilmDirectors(newFilm);
-        loadDirectorsToFilm(newFilm);
+        loadDirectorsAndGenresToFilm(newFilm);
         loadLikesToFilm(newFilm);
         return newFilm;
     }
@@ -128,7 +135,7 @@ public class FilmDbStorage implements FilmStorage {
             if (film != null) {
                 films.add(film);
             }
-            films.forEach(this::loadDirectorsToFilm);
+            films.forEach(this::loadDirectorsAndGenresToFilm);
             return films;
         });
     }
@@ -149,7 +156,7 @@ public class FilmDbStorage implements FilmStorage {
                 Long genreId = rs.getLong("genre_id");
                 if (!rs.wasNull()) film.getGenres().add(new Genre(genreId, rs.getString("genre_name")));
             }
-            loadDirectorsToFilm(film);
+            loadDirectorsAndGenresToFilm(film);
             return film;
         });
     }
@@ -241,7 +248,7 @@ public class FilmDbStorage implements FilmStorage {
                 }
             }
             if (film != null) {
-                loadDirectorsToFilm(film);
+                loadDirectorsAndGenresToFilm(film);
                 films.add(film);
             }
             return films;
@@ -308,7 +315,7 @@ public class FilmDbStorage implements FilmStorage {
         Collection<Film> films = jdbcTemplate.query(FIND_FILMS_BY_DIRECTOR, FilmDbStorage::mapRowToFilm, directorId);
         films.forEach(film -> {
             loadLikesToFilm(film);
-            loadDirectorsToFilm(film);
+            loadDirectorsAndGenresToFilm(film);
         });
         return films;
     }
@@ -324,7 +331,7 @@ public class FilmDbStorage implements FilmStorage {
         List<Film> likedFilms = jdbcTemplate.query(FIND_LIKED_FILMS_BY_USER_ID, FilmDbStorage::mapRowToFilm, userId);
         likedFilms.forEach(film -> {
             loadLikesToFilm(film);
-            loadDirectorsToFilm(film);
+            loadDirectorsAndGenresToFilm(film);
         });
         return likedFilms;
     }
