@@ -112,6 +112,17 @@ public class FilmService {
                 .toList();
     }
 
+    public void delete(Long id) {
+        validateFilm(id);
+        filmStorage.delete(id);
+        log.info("Был удалён фильм с id: {}", id);
+    }
+
+    public void deleteAll() {
+        filmStorage.deleteAll();
+        log.info("Таблица film была очищена");
+    }
+
     private Film validateFilm(Long filmId) {
         if (!filmStorage.isFilmExists(filmId)) {
             log.error("Фильм c id:{} не найден", filmId);
@@ -133,7 +144,7 @@ public class FilmService {
             return;
         }
 
-        List<Integer> genreIds = film.getGenres().stream()
+        List<Long> genreIds = film.getGenres().stream()
                 .map(Genre::getId)
                 .collect(Collectors.toList());
 

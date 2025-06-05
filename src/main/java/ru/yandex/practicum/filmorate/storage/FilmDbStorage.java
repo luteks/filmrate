@@ -37,7 +37,7 @@ public class FilmDbStorage implements FilmStorage {
                 .description(resultSet.getString("description"))
                 .releaseDate(LocalDate.parse(resultSet.getString("release_date")))
                 .duration(resultSet.getInt("duration"))
-                .mpa(new Mpa(resultSet.getInt("rating_id"), resultSet.getString("mpa_rating.name")))
+                .mpa(new Mpa(resultSet.getLong("rating_id"), resultSet.getString("mpa_rating.name")))
                 .directors(new HashSet<>())
                 .likes(new HashSet<>())
                 .build();
@@ -120,7 +120,7 @@ public class FilmDbStorage implements FilmStorage {
                     }
                     film = mapRowToFilm(rs, rs.getRow());
                 }
-                Integer genreId = rs.getInt("genre_id");
+                Long genreId = rs.getLong("genre_id");
                 if (!rs.wasNull()) {
                     film.getGenres().add(new Genre(genreId, rs.getString("genre_name")));
                 }
@@ -146,7 +146,7 @@ public class FilmDbStorage implements FilmStorage {
                 if (film == null) {
                     film = mapRowToFilm(rs, rs.getRow());
                 }
-                Integer genreId = rs.getInt("genre_id");
+                Long genreId = rs.getLong("genre_id");
                 if (!rs.wasNull()) film.getGenres().add(new Genre(genreId, rs.getString("genre_name")));
             }
             loadDirectorsToFilm(film);
@@ -155,9 +155,38 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public void deleteFilmById(Long filmId) {
+    public void delete(Long filmId) {
+        deleteRelated(Optional.of(filmId));
         String sql = "DELETE FROM films WHERE film_id = :film_id;";
         jdbc.update(sql, new MapSqlParameterSource("film_id", filmId));
+    }
+
+    @Override
+    public void deleteAll() {
+        deleteRelated(Optional.empty());
+        String sql = "DELETE FROM films";
+        jdbcTemplate.update(sql);
+    }
+
+    private void deleteRelated(Optional<Long> filmId) {
+        String DELETE_ALL_LIKE_BY_FILM_ID = "DELETE FROM likes WHERE film_id = :film_id;";
+        String DELETE_ALL_LIKES = "DELETE FROM likes";
+        String DELETE_ALL_FILM_GENRE_BY_FILM_ID = "DELETE FROM film_genres WHERE film_id = :film_id;";
+        String DELETE_ALL_FILMS_GENRES = "DELETE FROM film_genres";
+        String DELETE_ALL_FILM_DIRECTOR_BY_FILM_ID = "DELETE FROM film_directors WHERE film_id = :film_id;";
+        String DELETE_ALL_FILM_DIRECTOR = "DELETE FROM film_directors";
+
+        if (filmId.isPresent()) {
+            MapSqlParameterSource param = new MapSqlParameterSource("film_id", filmId.get());
+
+            jdbc.update(DELETE_ALL_LIKE_BY_FILM_ID, param);
+            jdbc.update(DELETE_ALL_FILM_GENRE_BY_FILM_ID, param);
+            jdbc.update(DELETE_ALL_FILM_DIRECTOR_BY_FILM_ID, param);
+        } else {
+            jdbcTemplate.update(DELETE_ALL_LIKES);
+            jdbcTemplate.update(DELETE_ALL_FILMS_GENRES);
+            jdbcTemplate.update(DELETE_ALL_FILM_DIRECTOR);
+        }
     }
 
     @Override
@@ -206,7 +235,7 @@ public class FilmDbStorage implements FilmStorage {
                     }
                     film = mapRowToFilm(rs, rs.getRow());
                 }
-                Integer genreId = rs.getInt("genre_id");
+                Long genreId = rs.getLong("genre_id");
                 if (!rs.wasNull()) {
                     film.getGenres().add(new Genre(genreId, rs.getString("genre_name")));
                 }
@@ -261,7 +290,7 @@ public class FilmDbStorage implements FilmStorage {
                     }
                     film = mapRowToFilm(rs, rs.getRow());
                 }
-                Integer genreId = rs.getInt("genre_id");
+                Long genreId = rs.getLong("genre_id");
                 if (!rs.wasNull()) {
                     film.getGenres().add(new Genre(genreId, rs.getString("genre_name")));
                 }
@@ -442,7 +471,7 @@ public class FilmDbStorage implements FilmStorage {
                 Film film = filmMap.get(rs.getLong("film_id"));
                 if (film != null) {
                     film.getGenres().add(new Genre(
-                            rs.getInt("genre_id"),
+                            rs.getLong("genre_id"),
                             rs.getString("name")
                     ));
                 }

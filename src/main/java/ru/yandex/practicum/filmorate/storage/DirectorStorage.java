@@ -6,13 +6,15 @@ import java.util.Collection;
 import java.util.Optional;
 
 public interface DirectorStorage {
-    public Optional<Director> findById(int id);
+    Optional<Director> findById(int id);
 
-    public Collection<Director> findAll();
+    Collection<Director> findAll();
 
-    public Director create(Director director);
+    Director create(Director director);
 
-    public Director update(Director director);
+    Director update(Director director);
 
-    public void deleteById(int id);
+    void deleteById(int id);
+
+    void deleteAll();
 }

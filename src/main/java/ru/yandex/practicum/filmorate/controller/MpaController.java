@@ -1,10 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.MpaService;
 
@@ -22,7 +19,7 @@ public class MpaController {
     }
 
     @GetMapping("/{id}")
-    public Mpa getMpa(@PathVariable("id") int mpaId) {
+    public Mpa getMpa(@PathVariable("id") Long mpaId) {
         return mpaService.getMpa(mpaId);
     }
 }

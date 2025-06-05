@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -12,12 +13,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.Optional;
 
 @Repository
 @Primary
 @RequiredArgsConstructor
 public class UserDbStorage implements UserStorage {
     private final NamedParameterJdbcOperations jdbc;
+    private final JdbcTemplate jdbcTemplate;
 
     private User mapRowToUser(ResultSet resultSet, int rowNum) throws SQLException {
         return User.builder()
@@ -60,9 +63,33 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public void deleteUserById(Long userId) {
+    public void delete(Long userId) {
+        deleteRelated(Optional.of(userId));
         String sqlQuery = "DELETE FROM users WHERE user_id = :user_id;";
         jdbc.update(sqlQuery, new MapSqlParameterSource("user_id", userId));
+    }
+
+    @Override
+    public void deleteAll() {
+        deleteRelated(Optional.empty());
+        String sql = "DELETE FROM users";
+        jdbcTemplate.update(sql);
+    }
+
+    private void deleteRelated(Optional<Long> userId) {
+        String DELETE_ALL_FRIENDS = "DELETE FROM friendship";
+        String DELETE_LIKE_BY_ID = "DELETE FROM likes WHERE user_id = :user_id;";
+        String DELETE_ALL_LIKES = "DELETE FROM likes";
+        String DELETE_ALL_FRIENDS_BY_USER_ID = "DELETE FROM friendship WHERE user_id = :user_id;";
+
+        if (userId.isPresent()) {
+            MapSqlParameterSource param = new MapSqlParameterSource("user_id", userId.get());
+            jdbc.update(DELETE_LIKE_BY_ID, param);
+            jdbc.update(DELETE_ALL_FRIENDS_BY_USER_ID, param);
+        } else {
+            jdbcTemplate.update(DELETE_ALL_LIKES);
+            jdbcTemplate.update(DELETE_ALL_FRIENDS);
+        }
     }
 
     @Override

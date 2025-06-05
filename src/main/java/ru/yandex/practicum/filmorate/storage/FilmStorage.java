@@ -14,7 +14,9 @@ public interface FilmStorage {
 
     Film findById(Long filmId);
 
-    void deleteFilmById(Long filmId);
+    void delete(Long filmId);
+
+    void deleteAll();
 
     void addLikeByUser(Long filmId, Long userId);
 

@@ -123,4 +123,15 @@ public class UserService {
         log.info("Получена лента событий пользователя с id: {}", userId);
         return feedStorage.getFeed(userId).stream().toList();
     }
+
+    public void delete(Long id) {
+        findByIdFromStorage(id);
+        userStorage.delete(id);
+        log.info("Был удалён пользователь с id: {}", id);
+    }
+
+    public void deleteAll() {
+        userStorage.deleteAll();
+        log.info("Таблица users была очищена");
+    }
 }
