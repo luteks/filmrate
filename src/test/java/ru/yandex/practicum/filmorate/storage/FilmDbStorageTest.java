@@ -30,7 +30,7 @@ public class FilmDbStorageTest {
                 .description("Test description")
                 .releaseDate(LocalDate.parse("1980-05-21"))
                 .duration(100)
-                .mpa(new Mpa(1, "G"))
+                .mpa(new Mpa(1L, "G"))
                 .build());
     }
 
@@ -38,7 +38,7 @@ public class FilmDbStorageTest {
     void testCreateFilm() {
         assertNotNull(film.getName());
         assertEquals("Test name", film.getName());
-        assertEquals(1, filmStorage.getFilms().size());
+        assertEquals(1L, filmStorage.getFilms().size());
     }
 
     @Test
@@ -48,7 +48,7 @@ public class FilmDbStorageTest {
                 .description("Test description")
                 .releaseDate(LocalDate.parse("1980-05-21"))
                 .duration(100)
-                .mpa(new Mpa(1, "G"))
+                .mpa(new Mpa(1L, "G"))
                 .build());
 
         assertEquals("New test name", film.getName());
@@ -62,7 +62,7 @@ public class FilmDbStorageTest {
                 .description("Test description")
                 .releaseDate(LocalDate.parse("1985-02-01"))
                 .duration(170)
-                .mpa(new Mpa(1, "G"))
+                .mpa(new Mpa(1L, "G"))
                 .build());
 
         assertNotNull(filmStorage.getFilms());
@@ -76,7 +76,7 @@ public class FilmDbStorageTest {
                 .description("Test description")
                 .releaseDate(LocalDate.parse("1980-05-21"))
                 .duration(100)
-                .mpa(new Mpa(1, "G"))
+                .mpa(new Mpa(1L, "G"))
                 .build());
 
         assertNotNull(film);
@@ -90,7 +90,7 @@ public class FilmDbStorageTest {
                 .description("Test description")
                 .releaseDate(LocalDate.parse("1980-05-21"))
                 .duration(100)
-                .mpa(new Mpa(1, "G"))
+                .mpa(new Mpa(1L, "G"))
                 .build());
 
         assertTrue(filmStorage.isFilmExists(film.getId()));
