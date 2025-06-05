@@ -80,8 +80,8 @@ public class GenreDbStorage implements GenreStorage {
     }
 
     private void deleteRelated(Optional<Long> genreId) {
-        String DELETE_FILM_GENRE = "DELETE FROM film_genres";
-        String DELETE_FILM_GENRE_BY_GENRE_ID = "DELETE FROM film_genres WHERE genre_id = :genre_id;";
+        final String DELETE_FILM_GENRE = "DELETE FROM film_genres";
+        final String DELETE_FILM_GENRE_BY_GENRE_ID = "DELETE FROM film_genres WHERE genre_id = :genre_id;";
 
         if (genreId.isPresent()) {
             MapSqlParameterSource param = new MapSqlParameterSource("genre_id", genreId.get());

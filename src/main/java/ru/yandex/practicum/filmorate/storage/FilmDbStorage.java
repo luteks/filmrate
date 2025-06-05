@@ -169,12 +169,12 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private void deleteRelated(Optional<Long> filmId) {
-        String DELETE_ALL_LIKE_BY_FILM_ID = "DELETE FROM likes WHERE film_id = :film_id;";
-        String DELETE_ALL_LIKES = "DELETE FROM likes";
-        String DELETE_ALL_FILM_GENRE_BY_FILM_ID = "DELETE FROM film_genres WHERE film_id = :film_id;";
-        String DELETE_ALL_FILMS_GENRES = "DELETE FROM film_genres";
-        String DELETE_ALL_FILM_DIRECTOR_BY_FILM_ID = "DELETE FROM film_directors WHERE film_id = :film_id;";
-        String DELETE_ALL_FILM_DIRECTOR = "DELETE FROM film_directors";
+        final String DELETE_ALL_LIKE_BY_FILM_ID = "DELETE FROM likes WHERE film_id = :film_id;";
+        final String DELETE_ALL_LIKES = "DELETE FROM likes";
+        final String DELETE_ALL_FILM_GENRE_BY_FILM_ID = "DELETE FROM film_genres WHERE film_id = :film_id;";
+        final String DELETE_ALL_FILMS_GENRES = "DELETE FROM film_genres";
+        final String DELETE_ALL_FILM_DIRECTOR_BY_FILM_ID = "DELETE FROM film_directors WHERE film_id = :film_id;";
+        final String DELETE_ALL_FILM_DIRECTOR = "DELETE FROM film_directors";
 
         if (filmId.isPresent()) {
             MapSqlParameterSource param = new MapSqlParameterSource("film_id", filmId.get());

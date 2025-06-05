@@ -77,10 +77,10 @@ public class UserDbStorage implements UserStorage {
     }
 
     private void deleteRelated(Optional<Long> userId) {
-        String DELETE_ALL_FRIENDS = "DELETE FROM friendship";
-        String DELETE_LIKE_BY_ID = "DELETE FROM likes WHERE user_id = :user_id;";
-        String DELETE_ALL_LIKES = "DELETE FROM likes";
-        String DELETE_ALL_FRIENDS_BY_USER_ID = "DELETE FROM friendship WHERE user_id = :user_id;";
+        final String DELETE_ALL_FRIENDS = "DELETE FROM friendship";
+        final String DELETE_LIKE_BY_ID = "DELETE FROM likes WHERE user_id = :user_id;";
+        final String DELETE_ALL_LIKES = "DELETE FROM likes";
+        final String DELETE_ALL_FRIENDS_BY_USER_ID = "DELETE FROM friendship WHERE user_id = :user_id;";
 
         if (userId.isPresent()) {
             MapSqlParameterSource param = new MapSqlParameterSource("user_id", userId.get());
