@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.enums.EventType;
 import ru.yandex.practicum.filmorate.enums.Operation;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.FeedStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -25,7 +26,13 @@ public class ReviewService {
 
     public Review findById(Long id) {
         log.info("Начат поиск отзыва с id = {}", id);
-        return getReviewById(id);
+
+        if (!reviewStorage.isReviewExist(id)) {
+            log.error("Отзыв с id={} не найден", id);
+            throw new NotFoundException("Отзыв с id=" + id + " не найден");
+        }
+
+        return reviewStorage.findById(id);
     }
 
     public Collection<Review> findAll(int limit) {
@@ -39,8 +46,7 @@ public class ReviewService {
     }
 
     public Review create(Review review) {
-        validateFilm(review.getFilmId());
-        validateUser(review.getUserId());
+        validateReview(review);
         Review reviewCreated = reviewStorage.create(review);
         log.info("создан новый отзыв {}", review);
 
@@ -52,11 +58,7 @@ public class ReviewService {
     }
 
     public Review update(Review review) {
-        if (review.getReviewId() == null) {
-            throw new IllegalArgumentException("отсутствует id");
-        }
-        validateFilm(review.getFilmId());
-        validateUser(review.getUserId());
+        validateReview(review);
         Review updatedReview = reviewStorage.update(review);
         log.info("отзыв обновлен {}", review);
 
@@ -68,7 +70,7 @@ public class ReviewService {
     }
 
     public void delete(Long id) {
-        Review deletedReview = getReviewById(id);
+        Review deletedReview = findById(id);
         reviewStorage.delete(id);
 
         feedStorage.addEventToFeed(deletedReview.getUserId(), EventType.REVIEW, Operation.REMOVE, deletedReview.getReviewId());
@@ -77,8 +79,9 @@ public class ReviewService {
     }
 
     public void addLike(Long reviewId, Long userId) {
-        Review review = getReviewById(reviewId);
+        validateLikeInput(reviewId, userId);
         validateUser(userId);
+        Review review = reviewStorage.findById(reviewId);
         if (reviewStorage.hasUserRatedTheReview(reviewId, userId) && reviewStorage.getUserRating(reviewId, userId)) {
             log.warn("Лайк уже существует для отзыва {} от пользователя {}", reviewId, userId);
             throw new IllegalArgumentException("пользователь " + userId + " уже ставил лайк отзыву " + reviewId);
@@ -99,8 +102,9 @@ public class ReviewService {
     }
 
     public void addDislike(Long reviewId, Long userId) {
-        Review review = getReviewById(reviewId);
+        validateLikeInput(reviewId, userId);
         validateUser(userId);
+        Review review = reviewStorage.findById(reviewId);
         if (reviewStorage.hasUserRatedTheReview(reviewId, userId) && !reviewStorage.getUserRating(reviewId, userId)) {
             log.warn("Дизлайк уже существует для отзыва {} от пользователя {}", reviewId, userId);
             throw new IllegalArgumentException("пользователь " + userId + " уже ставил дизлайк отзыву " + reviewId);
@@ -122,9 +126,10 @@ public class ReviewService {
     }
 
     public void deleteLike(Long reviewId, Long userId) {
-        Review review = getReviewById(reviewId);
+        validateLikeInput(reviewId, userId);
         validateUser(userId);
         if (reviewStorage.hasUserRatedTheReview(reviewId, userId) && reviewStorage.getUserRating(reviewId, userId)) {
+            Review review = reviewStorage.findById(reviewId);
             review.removeLike();
             reviewStorage.deleteRating(reviewId, userId);
             reviewStorage.updateRating(review);
@@ -136,9 +141,10 @@ public class ReviewService {
     }
 
     public void deleteDislike(Long reviewId, Long userId) {
-        Review review = getReviewById(reviewId);
+        validateLikeInput(reviewId, userId);
         validateUser(userId);
         if (reviewStorage.hasUserRatedTheReview(reviewId, userId) && !reviewStorage.getUserRating(reviewId, userId)) {
+            Review review = reviewStorage.findById(reviewId);
             review.removeDislike();
             reviewStorage.deleteRating(reviewId, userId);
             reviewStorage.updateRating(review);
@@ -149,12 +155,31 @@ public class ReviewService {
         }
     }
 
+    private void validateReview(Review review) {
+        if (review.getUserId() == null) {
+            throw new ValidationException("Пользователь не указан (userId=null)");
+        }
+        if (review.getFilmId() == null) {
+            throw new ValidationException("Фильм не указан (filmId=null)");
+        }
+        if (review.getIsPositive() == null) {
+            throw new ValidationException("Тип отзыва не указан (isPositive=null)");
+        }
+        if (review.getContent() == null || review.getContent().isBlank()) {
+            throw new ValidationException("Содержание отзыва не указано (content=null)");
+        }
 
-    private Review getReviewById(Long id) {
-        return reviewStorage.findById(id).orElseThrow(() -> {
-            log.warn("Отзыв с id {} не найден", id);
-            return new NotFoundException("отзыв с id " + id + " не найден");
-        });
+        validateUser(review.getUserId());
+
+        validateFilm(review.getFilmId());
+    }
+
+    private void validateLikeInput(Long reviewId, Long userId) {
+        if (!reviewStorage.isReviewExist(reviewId)) {
+            log.error("Отзыв с id={} не найден.", reviewId);
+            throw new ValidationException("Отзыв с id=" + reviewId + " не найден");
+        }
+        validateUser(userId);
     }
 
     private void validateUser(Long userId) {

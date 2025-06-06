@@ -12,7 +12,7 @@ public interface ReviewStorage {
 
     void delete(Long id);
 
-    Optional<Review> findById(Long id);
+    Review findById(Long id);
 
     Collection<Review> findAll(int limit);
 
@@ -29,4 +29,6 @@ public interface ReviewStorage {
     void deleteRating(Long reviewId, Long userId);
 
     void updateRating(Review review);
+
+    boolean isReviewExist(Long id);
 }

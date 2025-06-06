@@ -3,6 +3,8 @@ package ru.yandex.practicum.filmorate.storage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -20,6 +22,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ReviewDbStorage implements ReviewStorage {
     private final JdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcOperations jdbc;
 
     private Review mapRowToReview(ResultSet rs, int rowNum) throws SQLException {
         return Review.builder()
@@ -35,8 +38,8 @@ public class ReviewDbStorage implements ReviewStorage {
     @Override
     public Review update(Review review) {
         final String UPDATE_QUERY = "UPDATE reviews SET " +
-                "content = ?, is_positive=?, user_id =?, film_id =? WHERE review_id=?";
-        jdbcTemplate.update(UPDATE_QUERY, review.getContent(), review.getIsPositive(), review.getUserId(), review.getFilmId(), review.getReviewId());
+                "content = ?, is_positive=? WHERE review_id=?";
+        jdbcTemplate.update(UPDATE_QUERY, review.getContent(), review.getIsPositive(), review.getReviewId());
         return review;
     }
 
@@ -54,16 +57,20 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     @Override
-    public Optional<Review> findById(Long id) {
+    public Review findById(Long id) {
         final String FIND_REVIEW_QUERY = "SELECT review_id, content, is_positive, user_id, film_id, useful FROM reviews " +
                 "WHERE review_id=?";
-        Review review;
-        try {
-            review = jdbcTemplate.queryForObject(FIND_REVIEW_QUERY, this::mapRowToReview, id);
-        } catch (EmptyResultDataAccessException exception) {
-            return Optional.empty();
-        }
-        return Optional.ofNullable(review);
+        Review review = jdbcTemplate.queryForObject(FIND_REVIEW_QUERY, this::mapRowToReview, id);
+        return review;
+    }
+
+    @Override
+    public boolean isReviewExist(Long id) {
+        String sqlQuery = "SELECT COUNT(*) FROM reviews WHERE review_id = :review_id;";
+
+        Long count = jdbc.queryForObject(sqlQuery, new MapSqlParameterSource("review_id", id), Long.class);
+
+        return count != null && count == 1;
     }
 
     @Override
