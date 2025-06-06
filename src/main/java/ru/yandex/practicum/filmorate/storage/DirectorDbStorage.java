@@ -3,11 +3,15 @@ package ru.yandex.practicum.filmorate.storage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,6 +25,7 @@ import java.util.Optional;
 public class DirectorDbStorage implements DirectorStorage {
 
     private final JdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcOperations jdbc;
 
     private Director mapRowToDirector(ResultSet rs, int rowNum) throws SQLException {
         return Director.builder()
@@ -52,15 +57,16 @@ public class DirectorDbStorage implements DirectorStorage {
     }
 
     @Override
-    public Optional<Director> findById(int id) {
+    public Director findById(int id) {
         final String FIND_BY_ID_QUERY = "SELECT director_id, name FROM directors WHERE director_id=?";
-        Director director;
-        try {
-            director = jdbcTemplate.queryForObject(FIND_BY_ID_QUERY, this::mapRowToDirector, id);
-        } catch (EmptyResultDataAccessException exception) {
-            return Optional.empty();
-        }
-        return Optional.ofNullable(director);
+        Director director = jdbcTemplate.queryForObject(FIND_BY_ID_QUERY, this::mapRowToDirector, id);
+        return director;
+    }
+
+    @Override
+    public boolean isDirectorExist(Integer id) {
+        String sql = "SELECT COUNT(*) FROM directors WHERE director_id = :director_id;";
+        return 1 == jdbc.queryForObject(sql, new MapSqlParameterSource("director_id", id), Integer.class);
     }
 
     @Override
@@ -72,12 +78,10 @@ public class DirectorDbStorage implements DirectorStorage {
 
     @Override
     public void deleteById(int id) {
+        final String DELETE_FILM_DIRECTOR_QUERY = "DELETE FROM film_directors WHERE director_id=?";
         final String DELETE_BY_ID_QUERY = "DELETE FROM directors WHERE director_id=?";
-        int deletedRows = jdbcTemplate.update(DELETE_BY_ID_QUERY, id);
-
-        if (deletedRows == 0) {
-            throw new NotFoundException("режиссер с id " + id + " не найден");
-        }
+        jdbcTemplate.update(DELETE_FILM_DIRECTOR_QUERY, id);
+        jdbcTemplate.update(DELETE_BY_ID_QUERY, id);
     }
 
     @Override

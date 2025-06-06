@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 public interface DirectorStorage {
-    Optional<Director> findById(int id);
+    Director findById(int id);
 
     Collection<Director> findAll();
 
@@ -17,4 +17,6 @@ public interface DirectorStorage {
     void deleteById(int id);
 
     void deleteAll();
+
+    boolean isDirectorExist(Integer id);
 }

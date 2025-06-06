@@ -25,6 +25,7 @@ public class FilmService {
     private final MpaStorage mpaStorage;
     private final GenreStorage genreStorage;
     private final FeedStorage feedStorage;
+    private final DirectorStorage directorStorage;
 
     public Film create(Film film) {
         validateMpa(film);
@@ -103,6 +104,7 @@ public class FilmService {
     }
 
     public Collection<Film> getSortedFilmsByDirectorId(int directorId, String sortType) {
+        validateDirector(directorId);
         Collection<Film> films = filmStorage.getFilmsByDirectorId(directorId);
         log.debug("запрос фильмов режиссера с id{}", directorId);
         log.debug("тип сортировки {}", sortType);
@@ -158,6 +160,13 @@ public class FilmService {
         if (film.getMpa() != null && !mpaStorage.isMpaExists(film.getMpa().getId())) {
             log.error("Рейтинг фильма не найден {}", film.getMpa().getId());
             throw new NotFoundException("Рейтинг фильма не найден " + film.getMpa().getId());
+        }
+    }
+
+    private void validateDirector(Integer id) {
+        if (!directorStorage.isDirectorExist(id)) {
+            log.error("Директор фильма не найден {}", id);
+            throw new NotFoundException("Директор фильма не найден " + id);
         }
     }
 
