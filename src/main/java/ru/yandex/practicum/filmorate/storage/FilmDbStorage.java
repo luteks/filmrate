@@ -201,6 +201,13 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void addLikeByUser(Long filmId, Long userId) {
+        String checkSql = "SELECT COUNT(*) FROM likes WHERE user_id = ? AND film_id = ?";
+        Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, userId, filmId);
+
+        if (count != null && count > 0) {
+            return;
+        }
+
         String sql = "INSERT INTO likes (user_id, film_id) VALUES (:user_id, :film_id);";
 
         MapSqlParameterSource parameterSource = new MapSqlParameterSource();
