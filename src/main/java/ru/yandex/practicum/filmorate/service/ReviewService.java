@@ -14,6 +14,8 @@ import ru.yandex.practicum.filmorate.storage.ReviewStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -35,14 +37,20 @@ public class ReviewService {
         return reviewStorage.findById(id);
     }
 
-    public Collection<Review> findAll(int limit) {
-        log.info("Вывод списка отзывов размером {}", limit);
-        return reviewStorage.findAll(limit);
-    }
+    public Collection<Review> findReviewsOfFilm(Long filmId, Integer limit) {
+        if (filmId != null && filmStorage.findById(filmId) == null) {
+            log.warn("Отзыв с id {} не найден", filmId);
+            throw new NotFoundException("Отзыв с id " + filmId + " не найден");
+        }
 
-    public Collection<Review> findReviewsOfFilm(Long filmId, int limit) {
-        log.info("Начат поиск отзывов по filmId = {}", filmId);
-        return reviewStorage.findReviewsByFilmId(filmId, limit);
+        List<Review> all = (filmId == null)
+                ? reviewStorage.getAll()
+                : reviewStorage.getByFilmId(filmId);
+
+        return all.stream()
+                .sorted(Comparator.comparingInt(Review::getUseful).reversed())
+                .limit(limit)
+                .toList();
     }
 
     public Review create(Review review) {
@@ -94,10 +102,6 @@ public class ReviewService {
         review.addLike();
         log.info("Добавлен лайк для отзыва {} от пользователя {}", reviewId, userId);
 
-        feedStorage.addEventToFeed(userId, EventType.LIKE, Operation.ADD, reviewId);
-        log.info("Событие добавлено в ленту: пользователь с id: {} лайкнул отзыв с id: {}",
-                userId, reviewId);
-
         reviewStorage.updateRating(review);
     }
 
@@ -115,12 +119,8 @@ public class ReviewService {
         }
         reviewStorage.addDislike(reviewId, userId);
         review.addDislike();
-
         log.info("Добавлен дизлайк для отзыва {} от пользователя {}", reviewId, userId);
 
-        feedStorage.addEventToFeed(userId, EventType.LIKE, Operation.REMOVE, reviewId);
-        log.info("Событие добавлено в ленту: пользователь с id: {} удалил лайк с отзыва с id: {}",
-                userId, reviewId);
 
         reviewStorage.updateRating(review);
     }

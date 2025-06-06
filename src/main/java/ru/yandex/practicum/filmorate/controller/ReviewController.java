@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -38,10 +39,8 @@ public class ReviewController {
 
     @GetMapping
     public Collection<Review> findAll(@RequestParam(required = false) Long filmId,
-                                      @RequestParam(defaultValue = "10") int limit) {
-        if (filmId == null) {
-            return reviewService.findAll(limit);
-        }
+                                      @RequestParam(value = "count", defaultValue = "10") @Min(value = 1) Integer limit) {
+
         return reviewService.findReviewsOfFilm(filmId, limit);
 
     }

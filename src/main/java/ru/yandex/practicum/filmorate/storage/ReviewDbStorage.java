@@ -14,8 +14,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
@@ -38,21 +37,30 @@ public class ReviewDbStorage implements ReviewStorage {
     public Review update(Review review) {
         final String UPDATE_QUERY = "UPDATE reviews SET " +
                 "content = ?, is_positive=? WHERE review_id=?";
-        jdbcTemplate.update(UPDATE_QUERY, review.getContent(), review.getIsPositive(), review.getReviewId());
-        return review;
+        jdbcTemplate.update(UPDATE_QUERY,
+                review.getContent(),
+                review.getIsPositive(),
+                review.getReviewId()
+        );
+
+        return findById(review.getReviewId());
     }
 
     @Override
-    public Collection<Review> findReviewsByFilmId(Long filmId, int limit) {
-        final String REVIEWS_OF_FILM = "SELECT review_id, content, is_positive, user_id, film_id, useful FROM reviews " +
-                "WHERE film_id=? " +
-                "LIMIT(?)";
-        try {
-            return jdbcTemplate.query(REVIEWS_OF_FILM, this::mapRowToReview, filmId, limit);
-        } catch (EmptyResultDataAccessException ex) {
-            return Collections.emptyList();
-        }
+    public List<Review> getAll() {
+        final String GET_ALL = """
+                    SELECT review_id, content, is_positive, user_id, film_id, useful FROM reviews
+                    """;
+        return jdbcTemplate.query(GET_ALL, this::mapRowToReview);
+    }
 
+    @Override
+    public List<Review> getByFilmId(Long filmId) {
+        final String GET_BY_FILM_ID = """
+                    SELECT review_id, content, is_positive, user_id, film_id, useful
+                    FROM reviews WHERE film_id = ?
+                    """;
+        return jdbcTemplate.query(GET_BY_FILM_ID, this::mapRowToReview, filmId);
     }
 
     @Override
@@ -70,17 +78,6 @@ public class ReviewDbStorage implements ReviewStorage {
         Long count = jdbc.queryForObject(sqlQuery, new MapSqlParameterSource("review_id", id), Long.class);
 
         return count != null && count == 1;
-    }
-
-    @Override
-    public Collection<Review> findAll(int limit) {
-        final String FIND_ALL_QUERY = "SELECT review_id, content, is_positive, user_id, film_id, useful FROM reviews LIMIT(?)";
-        try {
-            return jdbcTemplate.query(FIND_ALL_QUERY, this::mapRowToReview, limit);
-        } catch (EmptyResultDataAccessException ex) {
-            return Collections.emptyList();
-        }
-
     }
 
     @Override

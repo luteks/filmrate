@@ -73,12 +73,12 @@ public class FilmDbStorage implements FilmStorage {
         film.setDirectors(directors);
 
         final String FIND_GENRES_BY_FILM_QUERY = """
-                SELECT g.genre_id, g.name
-                FROM genres g
-                JOIN film_genres fg ON g.genre_id = fg.genre_id
-                WHERE fg.film_id = ?
-                ORDER BY g.genre_id ASC;
-            """;
+                    SELECT g.genre_id, g.name
+                    FROM genres g
+                    JOIN film_genres fg ON g.genre_id = fg.genre_id
+                    WHERE fg.film_id = ?
+                    ORDER BY g.genre_id ASC;
+                """;
         Set<Genre> genres = new HashSet<>(jdbcTemplate.query(FIND_GENRES_BY_FILM_QUERY, (rs, rowNum) -> new Genre(rs.getLong("genre_id"), rs.getString("name")), film.getId()));
         film.addGenres(genres);
     }
@@ -173,7 +173,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void deleteAll() {
-       // deleteRelated(Optional.empty());
+        // deleteRelated(Optional.empty());
         String sql = "DELETE FROM films";
         jdbcTemplate.update(sql);
     }
@@ -220,47 +220,33 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Collection<Film> getTopFilms(Integer count, Integer genId, Integer year) {
         String sql = """
-                SELECT f.*,
-                       mpa.name AS mpa_rating_name,
-                       g.genre_id,
-                       g.name AS genre_name,
-                       COUNT(l.user_id) AS likes_count
-                FROM films f
-                LEFT JOIN mpa_rating mpa ON f.rating_id = mpa.rating_id
-                LEFT JOIN film_genres fg ON f.film_id = fg.film_id
-                LEFT JOIN genres g ON fg.genre_id = g.genre_id
-                LEFT JOIN likes l ON f.film_id = l.film_id
-                WHERE (:genreId IS NULL OR fg.genre_id = :genreId)
-                  AND (:year IS NULL OR EXTRACT(YEAR FROM f.release_date) = :year)
-                GROUP BY f.film_id, mpa.rating_id, g.genre_id
-                ORDER BY likes_count DESC
-                LIMIT :count
-                """;
+        SELECT f.*,
+               mpa.name AS mpa_rating_name,
+               COUNT(l.user_id) AS likes_count
+        FROM films f
+        LEFT JOIN mpa_rating mpa ON f.rating_id = mpa.rating_id
+        LEFT JOIN film_genres fg ON f.film_id = fg.film_id
+        LEFT JOIN likes l ON f.film_id = l.film_id
+        WHERE (:genreId IS NULL OR fg.genre_id = :genreId)
+          AND (:year IS NULL OR EXTRACT(YEAR FROM f.release_date) = :year)
+        GROUP BY f.film_id, mpa.rating_id, f.name, f.description, f.release_date, f.duration
+        ORDER BY likes_count DESC
+        LIMIT :count
+        """;
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("count", count)
                 .addValue("genreId", genId)
-                .addValue("year", year);
+                .addValue("year", year)
+                .addValue("count", count);
 
         return jdbc.query(sql, params, rs -> {
             Collection<Film> films = new LinkedList<>();
-            Film film = null;
             while (rs.next()) {
-                if (film == null || !film.getId().equals(rs.getLong("film_id"))) {
-                    if (film != null) {
-                        films.add(film);
-                    }
-                    film = mapRowToFilm(rs, rs.getRow());
-                }
-                Long genreId = rs.getLong("genre_id");
-                if (!rs.wasNull()) {
-                    film.getGenres().add(new Genre(genreId, rs.getString("genre_name")));
-                }
-            }
-            if (film != null) {
-                loadDirectorsAndGenresToFilm(film);
+                Film film = mapRowToFilm(rs, rs.getRow());
                 films.add(film);
             }
+            films.forEach(this::loadDirectorsAndGenresToFilm);
+            films.forEach(this::loadLikesToFilm);
             return films;
         });
     }
@@ -365,11 +351,11 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> searchByTitle(String query) {
         String sql = """
-        SELECT DISTINCT f.*, mpa.name AS mpa_rating_name
-        FROM films f
-        LEFT JOIN mpa_rating mpa ON f.rating_id = mpa.rating_id
-        WHERE LOWER(f.name) LIKE LOWER(?)
-        """;
+                SELECT DISTINCT f.*, mpa.name AS mpa_rating_name
+                FROM films f
+                LEFT JOIN mpa_rating mpa ON f.rating_id = mpa.rating_id
+                WHERE LOWER(f.name) LIKE LOWER(?)
+                """;
 
         List<Film> films = jdbcTemplate.query(
                 sql,
@@ -384,16 +370,16 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> searchByDirector(String query) {
         String sql = """
-        SELECT DISTINCT f.*, mpa.name AS mpa_rating_name
-        FROM films f
-        LEFT JOIN mpa_rating mpa ON f.rating_id = mpa.rating_id
-        WHERE f.film_id IN (
-            SELECT fd.film_id
-            FROM film_directors fd
-            JOIN directors d ON fd.director_id = d.director_id
-            WHERE LOWER(d.name) LIKE LOWER(?)
-        )
-        """;
+                SELECT DISTINCT f.*, mpa.name AS mpa_rating_name
+                FROM films f
+                LEFT JOIN mpa_rating mpa ON f.rating_id = mpa.rating_id
+                WHERE f.film_id IN (
+                    SELECT fd.film_id
+                    FROM film_directors fd
+                    JOIN directors d ON fd.director_id = d.director_id
+                    WHERE LOWER(d.name) LIKE LOWER(?)
+                )
+                """;
 
         List<Film> films = jdbcTemplate.query(
                 sql,
@@ -408,17 +394,17 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> searchByBoth(String query) {
         String sql = """
-        SELECT DISTINCT f.*, mpa.name AS mpa_rating_name
-        FROM films f
-        LEFT JOIN mpa_rating mpa ON f.rating_id = mpa.rating_id
-        WHERE LOWER(f.name) LIKE LOWER(?)
-        OR f.film_id IN (
-            SELECT fd.film_id
-            FROM film_directors fd
-            JOIN directors d ON fd.director_id = d.director_id
-            WHERE LOWER(d.name) LIKE LOWER(?)
-        )
-        """;
+                SELECT DISTINCT f.*, mpa.name AS mpa_rating_name
+                FROM films f
+                LEFT JOIN mpa_rating mpa ON f.rating_id = mpa.rating_id
+                WHERE LOWER(f.name) LIKE LOWER(?)
+                OR f.film_id IN (
+                    SELECT fd.film_id
+                    FROM film_directors fd
+                    JOIN directors d ON fd.director_id = d.director_id
+                    WHERE LOWER(d.name) LIKE LOWER(?)
+                )
+                """;
 
         String searchPattern = "%" + query.toLowerCase() + "%";
         List<Film> films = jdbcTemplate.query(
@@ -437,11 +423,11 @@ public class FilmDbStorage implements FilmStorage {
 
         if (!filmMap.isEmpty()) {
             String directorsSql = """
-            SELECT fd.film_id, d.director_id, d.name
-            FROM film_directors fd
-            JOIN directors d ON fd.director_id = d.director_id
-            WHERE fd.film_id IN (%s)
-            """.formatted(
+                    SELECT fd.film_id, d.director_id, d.name
+                    FROM film_directors fd
+                    JOIN directors d ON fd.director_id = d.director_id
+                    WHERE fd.film_id IN (%s)
+                    """.formatted(
                     filmMap.keySet().stream()
                             .map(String::valueOf)
                             .collect(Collectors.joining(","))
@@ -474,11 +460,11 @@ public class FilmDbStorage implements FilmStorage {
 
         if (!filmMap.isEmpty()) {
             String genresSql = """
-            SELECT fg.film_id, g.genre_id, g.name
-            FROM film_genres fg
-            JOIN genres g ON fg.genre_id = g.genre_id
-            WHERE fg.film_id IN (%s)
-            """.formatted(
+                    SELECT fg.film_id, g.genre_id, g.name
+                    FROM film_genres fg
+                    JOIN genres g ON fg.genre_id = g.genre_id
+                    WHERE fg.film_id IN (%s)
+                    """.formatted(
                     filmMap.keySet().stream()
                             .map(String::valueOf)
                             .collect(Collectors.joining(","))

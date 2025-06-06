@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.storage;
 
 import ru.yandex.practicum.filmorate.model.Review;
 
-import java.util.Collection;
+import java.util.List;
 
 public interface ReviewStorage {
     Review create(Review review);
@@ -13,9 +13,9 @@ public interface ReviewStorage {
 
     Review findById(Long id);
 
-    Collection<Review> findAll(int limit);
+    List<Review> getByFilmId(Long filmId);
 
-    Collection<Review> findReviewsByFilmId(Long filmId, int limit);
+    List<Review> getAll();
 
     boolean hasUserRatedTheReview(Long reviewId, Long userId);
 
