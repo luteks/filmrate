@@ -158,7 +158,7 @@ public class UserDbStorage implements UserStorage {
                     WHERE l1.user_id = :user_id
                     AND u.user_id != :user_id
                     GROUP BY u.user_id
-                    ORDER BY COUNT(:user_id) DESC
+                    ORDER BY COUNT(*) DESC
                     LIMIT 10
                 """;
 
