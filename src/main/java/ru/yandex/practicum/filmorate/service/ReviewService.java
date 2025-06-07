@@ -38,7 +38,9 @@ public class ReviewService {
     }
 
     public Collection<Review> findReviewsOfFilm(Long filmId, Integer limit) {
-        checkFilmExist(filmId);
+        if (filmId != null) {
+            checkFilmExist(filmId);
+        }
 
         List<Review> all = (filmId == null)
                 ? reviewStorage.getAll()
