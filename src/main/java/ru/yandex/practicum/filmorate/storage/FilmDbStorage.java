@@ -316,13 +316,23 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> findRecommendations(Long similarUserId, Long userId) {
         final String RECOMMENDATION_QUERY = """
-                    SELECT f.film_id AS id, f.name, f.description, f.release_date, f.duration, f.rating_id
-                        FROM films f
-                        JOIN likes l_sim ON f.film_id = l_sim.film_id
-                        WHERE l_sim.user_id = :simId
-                          AND f.film_id NOT IN (
-                            SELECT film_id FROM likes WHERE user_id = :userId
-                          )
+                    SELECT 
+                        f.film_id AS film_id,
+                        f.name,
+                        f.description,
+                        f.release_date,
+                        f.duration,
+                        f.rating_id,
+                        r.name AS rating_name
+                    FROM films f
+                    JOIN likes l_sim ON f.film_id = l_sim.film_id
+                    LEFT JOIN mpa_rating r ON f.rating_id = r.rating_id
+                    WHERE l_sim.user_id = :simId
+                      AND NOT EXISTS (
+                        SELECT 1 FROM likes l_user
+                        WHERE l_user.user_id = :userId
+                          AND l_user.film_id = f.film_id
+                      )
                 """.stripIndent();
 
         MapSqlParameterSource pr = new MapSqlParameterSource()
