@@ -316,7 +316,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> findRecommendations(Long similarUserId, Long userId) {
         final String RECOMMENDATION_QUERY = """
-                    SELECT 
+                    SELECT
                         f.film_id AS film_id,
                         f.name,
                         f.description,
