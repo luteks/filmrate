@@ -319,7 +319,7 @@ public class FilmDbStorage implements FilmStorage {
                     SELECT u.*
                     FROM likes l1
                     JOIN likes l2 ON l1.film_id = l2.film_id
-                    JOIN users u ON l2.user_id = u.id
+                    JOIN users u ON l2.user_id = u.user_id
                     WHERE l1.user_id = ?
                     AND u.user_id != ?
                     GROUP BY u.user_id
@@ -343,7 +343,7 @@ public class FilmDbStorage implements FilmStorage {
             return Collections.emptyList();
         }
 
-        Long similarUserId = similarUsers.get(0).getId();
+        Long similarUserId = similarUsers.getFirst().getId();
         MapSqlParameterSource parameterSource = new MapSqlParameterSource().addValue("similarUserId", similarUserId).addValue("userId", userId);
 
         List<Film> films = jdbc.query(RECOMMENDATION_QUERY, parameterSource, FilmDbStorage::mapRowToFilm);
