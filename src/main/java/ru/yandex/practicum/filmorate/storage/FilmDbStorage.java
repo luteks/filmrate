@@ -315,41 +315,54 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Collection<Film> getLikedFilms(Long userId) {
-        final String FIND_COMMON_LIKES_USERS = """
-                    SELECT u.*
-                    FROM likes l1
-                    JOIN likes l2 ON l1.film_id = l2.film_id
-                    JOIN users u ON l2.user_id = u.user_id
-                    WHERE l1.user_id = ?
-                    AND u.user_id != ?
-                    GROUP BY u.user_id
-                    ORDER BY COUNT(*) DESC
-                    LIMIT 10
+        final String FIND_LIKED_FILMS_BY_USER_ID = """
+                                WITH user_likes AS (
+                                SELECT film_id
+                        FROM likes
+                        WHERE user_id = ?
+                ),
+                        common_users AS (
+                                SELECT l.user_id
+                        FROM likes l
+                        JOIN user_likes ul ON l.film_id = ul.film_id
+                        WHERE l.user_id != ?
+                                GROUP BY l.user_id
+                ),
+                        common_counts AS (
+                                SELECT cu.user_id,
+                                COUNT(*) AS common_count
+                        FROM common_users cu
+                        JOIN likes l ON cu.user_id = l.user_id
+                        JOIN user_likes ul ON l.film_id = ul.film_id
+                        GROUP BY cu.user_id
+                ),
+                        max_common AS (
+                                SELECT MAX(common_count) AS max_common
+                        FROM common_counts
+                ),
+                        best_users AS (
+                                SELECT cc.user_id
+                        FROM common_counts cc, max_common mc
+                        WHERE cc.common_count = mc.max_common
+                ),
+                        recommended_films AS (
+                                SELECT DISTINCT l.film_id
+                        FROM likes l
+                        JOIN best_users bu ON l.user_id = bu.user_id
+                        LEFT JOIN user_likes ul ON l.film_id = ul.film_id
+                        WHERE ul.film_id IS NULL
+                )
+                        SELECT f.*, mpa.name AS mpa_rating_name
+                        FROM films f
+                        JOIN recommended_films rf ON f.film_id = rf.film_id
+                        LEFT JOIN mpa_rating mpa ON f.rating_id = mpa.rating_id;
                 """;
-        final String RECOMMENDATION_QUERY = """
-                    SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.rating_id
-                    FROM films f
-                    JOIN likes l_sim ON f.film_id = l_sim.film_id
-                    WHERE l_sim.user_id = :similarUserId
-                    AND f.film_id NOT IN (
-                        SELECT film_id FROM likes WHERE user_id = :userId
-                    )
-                """;
-
-        List<User> similarUsers = jdbc.query(FIND_COMMON_LIKES_USERS, this::mapRowToUser);
-
-        if (similarUsers.isEmpty()) {
-            log.info("Похожих пользователей не найдено для пользователя с id={}", userId);
-            return Collections.emptyList();
-        }
-
-        Long similarUserId = similarUsers.getFirst().getId();
-        MapSqlParameterSource parameterSource = new MapSqlParameterSource().addValue("similarUserId", similarUserId).addValue("userId", userId);
-
-        List<Film> films = jdbc.query(RECOMMENDATION_QUERY, parameterSource, FilmDbStorage::mapRowToFilm);
-        films.forEach(this::loadDirectorsAndGenresToFilm);
-        films.forEach(this::loadLikesToFilm);
-        return films;
+        List<Film> likedFilms = jdbcTemplate.query(FIND_LIKED_FILMS_BY_USER_ID, FilmDbStorage::mapRowToFilm, userId, userId);
+        likedFilms.forEach(film -> {
+            loadLikesToFilm(film);
+            loadDirectorsAndGenresToFilm(film);
+        });
+        return likedFilms;
     }
 
     private User mapRowToUser(ResultSet resultSet, int rowNum) throws SQLException {
