@@ -321,17 +321,17 @@ public class FilmDbStorage implements FilmStorage {
                     JOIN likes l2 ON l1.film_id = l2.film_id
                     JOIN users u ON l2.user_id = u.id
                     WHERE l1.user_id = ?
-                    AND u.id != ?
-                    GROUP BY u.id
+                    AND u.user_id != ?
+                    GROUP BY u.user_id
                     ORDER BY COUNT(*) DESC
                     LIMIT 10
                 """;
         final String RECOMMENDATION_QUERY = """
-                    SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+                    SELECT f.film_id, f.name, f.description, f.release_date, f.duration, f.rating_id
                     FROM films f
-                    JOIN likes l_sim ON f.id = l_sim.film_id
+                    JOIN likes l_sim ON f.film_id = l_sim.film_id
                     WHERE l_sim.user_id = :similarUserId
-                    AND f.id NOT IN (
+                    AND f.film_id NOT IN (
                         SELECT film_id FROM likes WHERE user_id = :userId
                     )
                 """;
