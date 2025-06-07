@@ -314,55 +314,23 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getLikedFilms(Long userId) {
-        final String FIND_LIKED_FILMS_BY_USER_ID = """
-                                WITH user_likes AS (
-                                SELECT film_id
-                        FROM likes
-                        WHERE user_id = ?
-                ),
-                        common_users AS (
-                                SELECT l.user_id
-                        FROM likes l
-                        JOIN user_likes ul ON l.film_id = ul.film_id
-                        WHERE l.user_id != ?
-                                GROUP BY l.user_id
-                ),
-                        common_counts AS (
-                                SELECT cu.user_id,
-                                COUNT(*) AS common_count
-                        FROM common_users cu
-                        JOIN likes l ON cu.user_id = l.user_id
-                        JOIN user_likes ul ON l.film_id = ul.film_id
-                        GROUP BY cu.user_id
-                ),
-                        max_common AS (
-                                SELECT MAX(common_count) AS max_common
-                        FROM common_counts
-                ),
-                        best_users AS (
-                                SELECT cc.user_id
-                        FROM common_counts cc, max_common mc
-                        WHERE cc.common_count = mc.max_common
-                ),
-                        recommended_films AS (
-                                SELECT DISTINCT l.film_id
-                        FROM likes l
-                        JOIN best_users bu ON l.user_id = bu.user_id
-                        LEFT JOIN user_likes ul ON l.film_id = ul.film_id
-                        WHERE ul.film_id IS NULL
-                )
-                        SELECT f.*, mpa.name AS mpa_rating_name
-                        FROM films f
-                        JOIN recommended_films rf ON f.film_id = rf.film_id
-                        LEFT JOIN mpa_rating mpa ON f.rating_id = mpa.rating_id;
+    public List<Film> findRecommendations(Long similarUserId, Long userId) {
+        final String RECOMMENDATION_QUERY = """
+                    SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+                    FROM films f
+                    JOIN likes l_sim ON f.id = l_sim.film_id
+                    WHERE l_sim.user_id = :simId
+                    AND f.id NOT IN (
+                        SELECT film_id FROM likes WHERE user_id = userId
+                    )
                 """;
-        List<Film> likedFilms = jdbcTemplate.query(FIND_LIKED_FILMS_BY_USER_ID, FilmDbStorage::mapRowToFilm, userId, userId);
-        likedFilms.forEach(film -> {
-            loadLikesToFilm(film);
-            loadDirectorsAndGenresToFilm(film);
-        });
-        return likedFilms;
+
+        MapSqlParameterSource pr = new MapSqlParameterSource()
+                .addValue("simId", similarUserId)
+                .addValue("userId", userId);
+        List<Film> films = jdbc.query(RECOMMENDATION_QUERY, pr, FilmDbStorage::mapRowToFilm);
+        loadFilmData(films);
+        return films;
     }
 
     private User mapRowToUser(ResultSet resultSet, int rowNum) throws SQLException {

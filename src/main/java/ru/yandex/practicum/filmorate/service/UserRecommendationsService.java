@@ -15,12 +15,11 @@ import java.util.*;
 @RequiredArgsConstructor
 public class UserRecommendationsService {
     private final UserStorage userStorage;
-    private final FilmStorage filmStorage;
 
     public Collection<Film> getRecommendations(Long userId) {
         checkUserExists(userId);
 
-        return filmStorage.getLikedFilms(userId);
+        return userStorage.findRecommendedFilmsForUser(userId);
     }
 
     private void checkUserExists(Long userId) {

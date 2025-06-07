@@ -7,14 +7,13 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 @Primary
@@ -22,6 +21,7 @@ import java.util.Optional;
 public class UserDbStorage implements UserStorage {
     private final NamedParameterJdbcOperations jdbc;
     private final JdbcTemplate jdbcTemplate;
+    private final FilmStorage filmStorage;
 
     private User mapRowToUser(ResultSet resultSet, int rowNum) throws SQLException {
         return User.builder()
@@ -147,5 +147,34 @@ public class UserDbStorage implements UserStorage {
         String sqlQuery = "SELECT COUNT(*) FROM users WHERE user_id = :user_id;";
 
         return 1 == jdbc.queryForObject(sqlQuery, new MapSqlParameterSource("user_id", userId), Integer.class);
+    }
+
+    public List<User> findSimilarUsers(Long userId) {
+        final String FIND_COMMON_LIKES_USERS = """
+                    SELECT u.user_id
+                    FROM likes l1
+                    JOIN likes l2 ON l1.film_id = l2.film_id
+                    JOIN users u ON l2.user_id = u.id
+                    WHERE l1.user_id = :user_id
+                    AND u.user_id != :user_id
+                    GROUP BY u.user_id
+                    ORDER BY COUNT(:user_id) DESC
+                    LIMIT 10
+                """;
+
+        return jdbc.query(FIND_COMMON_LIKES_USERS, new MapSqlParameterSource("user_id", userId), this::mapRowToUser);
+    }
+
+    @Override
+    public List<Film> findRecommendedFilmsForUser(Long userId) {
+        List<User> similarUsers = findSimilarUsers(userId);
+
+        if (similarUsers.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Long similarUserId = similarUsers.getFirst().getId();
+
+        return filmStorage.findRecommendations(similarUserId, userId);
     }
 }
