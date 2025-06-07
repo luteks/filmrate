@@ -118,7 +118,7 @@ public class FilmDbStorage implements FilmStorage {
                 "ORDER BY f.film_id";
 
         return jdbc.query(sql, rs -> {
-            Collection<Film> films = new LinkedList<>();
+            List<Film> films = new LinkedList<>();
             Film film = null;
             while (rs.next()) {
                 if (film == null || !film.getId().equals(rs.getLong("film_id"))) {
@@ -135,7 +135,7 @@ public class FilmDbStorage implements FilmStorage {
             if (film != null) {
                 films.add(film);
             }
-            films.forEach(this::loadDirectorsAndGenresToFilm);
+            loadFilmData(films);
             return films;
         });
     }
@@ -163,37 +163,14 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public void delete(Long filmId) {
-        //deleteRelated(Optional.of(filmId));
         String sql = "DELETE FROM films WHERE film_id = :film_id;";
         jdbc.update(sql, new MapSqlParameterSource("film_id", filmId));
     }
 
     @Override
     public void deleteAll() {
-        // deleteRelated(Optional.empty());
         String sql = "DELETE FROM films";
         jdbcTemplate.update(sql);
-    }
-
-    private void deleteRelated(Optional<Long> filmId) {
-        final String DELETE_ALL_LIKE_BY_FILM_ID = "DELETE FROM likes WHERE film_id = :film_id;";
-        final String DELETE_ALL_LIKES = "DELETE FROM likes";
-        final String DELETE_ALL_FILM_GENRE_BY_FILM_ID = "DELETE FROM film_genres WHERE film_id = :film_id;";
-        final String DELETE_ALL_FILMS_GENRES = "DELETE FROM film_genres";
-        final String DELETE_ALL_FILM_DIRECTOR_BY_FILM_ID = "DELETE FROM film_directors WHERE film_id = :film_id;";
-        final String DELETE_ALL_FILM_DIRECTOR = "DELETE FROM film_directors";
-
-        if (filmId.isPresent()) {
-            MapSqlParameterSource param = new MapSqlParameterSource("film_id", filmId.get());
-
-            jdbc.update(DELETE_ALL_LIKE_BY_FILM_ID, param);
-            jdbc.update(DELETE_ALL_FILM_GENRE_BY_FILM_ID, param);
-            jdbc.update(DELETE_ALL_FILM_DIRECTOR_BY_FILM_ID, param);
-        } else {
-            jdbcTemplate.update(DELETE_ALL_LIKES);
-            jdbcTemplate.update(DELETE_ALL_FILMS_GENRES);
-            jdbcTemplate.update(DELETE_ALL_FILM_DIRECTOR);
-        }
     }
 
     @Override
@@ -237,13 +214,12 @@ public class FilmDbStorage implements FilmStorage {
                 .addValue("count", count);
 
         return jdbc.query(sql, params, rs -> {
-            Collection<Film> films = new LinkedList<>();
+            List<Film> films = new LinkedList<>();
             while (rs.next()) {
                 Film film = mapRowToFilm(rs, rs.getRow());
                 films.add(film);
             }
-            films.forEach(this::loadDirectorsAndGenresToFilm);
-            films.forEach(this::loadLikesToFilm);
+            loadFilmData(films);
             return films;
         });
     }
@@ -281,7 +257,7 @@ public class FilmDbStorage implements FilmStorage {
         parameterSource.addValue("friend_id", friendId);
 
         return jdbc.query(sql, parameterSource, rs -> {
-            Collection<Film> films = new LinkedList<>();
+            List<Film> films = new LinkedList<>();
             Film film = null;
             while (rs.next()) {
                 if (film == null || !film.getId().equals(rs.getLong("film_id"))) {
@@ -298,6 +274,7 @@ public class FilmDbStorage implements FilmStorage {
             if (film != null) {
                 films.add(film);
             }
+            loadFilmData(films);
             return films;
         });
     }
@@ -305,11 +282,8 @@ public class FilmDbStorage implements FilmStorage {
     public Collection<Film> getFilmsByDirectorId(int directorId) {
         final String FIND_FILMS_BY_DIRECTOR = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name " + "FROM films AS f " + "LEFT JOIN mpa_rating AS mpa ON f.rating_id = mpa.rating_id " + "LEFT JOIN film_genres AS fg ON f.film_id = fg.film_id " + "LEFT JOIN genres ON fg.genre_id = genres.genre_id " + "LEFT JOIN film_directors AS fd ON fd.film_id = f.film_id " + "WHERE fd.director_id=?";
 
-        Collection<Film> films = jdbcTemplate.query(FIND_FILMS_BY_DIRECTOR, FilmDbStorage::mapRowToFilm, directorId);
-        films.forEach(film -> {
-            loadLikesToFilm(film);
-            loadDirectorsAndGenresToFilm(film);
-        });
+        List<Film> films = jdbcTemplate.query(FIND_FILMS_BY_DIRECTOR, FilmDbStorage::mapRowToFilm, directorId);
+        loadFilmData(films);
         return films;
     }
 
