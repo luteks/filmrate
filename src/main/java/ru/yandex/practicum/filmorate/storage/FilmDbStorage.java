@@ -10,10 +10,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -220,19 +217,19 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Collection<Film> getTopFilms(Integer count, Long genId, Integer year) {
         String sql = """
-        SELECT f.*,
-               mpa.name AS mpa_rating_name,
-               COUNT(l.user_id) AS likes_count
-        FROM films f
-        LEFT JOIN mpa_rating mpa ON f.rating_id = mpa.rating_id
-        LEFT JOIN film_genres fg ON f.film_id = fg.film_id
-        LEFT JOIN likes l ON f.film_id = l.film_id
-        WHERE (:genreId IS NULL OR fg.genre_id = :genreId)
-          AND (:year IS NULL OR EXTRACT(YEAR FROM f.release_date) = :year)
-        GROUP BY f.film_id, mpa.rating_id, f.name, f.description, f.release_date, f.duration
-        ORDER BY likes_count DESC
-        LIMIT :count
-        """;
+                SELECT f.*,
+                       mpa.name AS mpa_rating_name,
+                       COUNT(l.user_id) AS likes_count
+                FROM films f
+                LEFT JOIN mpa_rating mpa ON f.rating_id = mpa.rating_id
+                LEFT JOIN film_genres fg ON f.film_id = fg.film_id
+                LEFT JOIN likes l ON f.film_id = l.film_id
+                WHERE (:genreId IS NULL OR fg.genre_id = :genreId)
+                  AND (:year IS NULL OR EXTRACT(YEAR FROM f.release_date) = :year)
+                GROUP BY f.film_id, mpa.rating_id, f.name, f.description, f.release_date, f.duration
+                ORDER BY likes_count DESC
+                LIMIT :count
+                """;
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("genreId", genId)
@@ -317,39 +314,52 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getLikedFilms(long userId) {
-        String sql = """
-        WITH UserLikes AS (
-            SELECT film_id FROM likes WHERE user_id = ?
-        ),
-        OtherUserIntersections AS (
-            SELECT l.user_id, COUNT(*) AS common_count
-            FROM likes l
-            JOIN UserLikes ul ON l.film_id = ul.film_id
-            WHERE l.user_id != ?
-            GROUP BY l.user_id
-        ),
-        MaxCommonUsers AS (
-            SELECT user_id
-            FROM OtherUserIntersections
-            WHERE common_count = (SELECT MAX(common_count) FROM OtherUserIntersections)
-        )
-        SELECT DISTINCT f.*, mpa.name AS mpa_rating_name
-        FROM likes l
-        JOIN films f ON l.film_id = f.film_id
-        LEFT JOIN mpa_rating mpa ON f.rating_id = mpa.rating_id
-        WHERE l.user_id IN (SELECT user_id FROM MaxCommonUsers)
-          AND l.film_id NOT IN (SELECT film_id FROM UserLikes)
-        """;
+    public Collection<Film> getLikedFilms(Long userId) {
+        final String FIND_COMMON_LIKES_USERS = """
+                    SELECT u.*
+                    FROM likes l1
+                    JOIN likes l2 ON l1.film_id = l2.film_id
+                    JOIN users u ON l2.user_id = u.id
+                    WHERE l1.user_id = ?
+                    AND u.id != ?
+                    GROUP BY u.id
+                    ORDER BY COUNT(*) DESC
+                    LIMIT 10
+                """;
+        final String RECOMMENDATION_QUERY = """
+                    SELECT f.id, f.name, f.description, f.release_date, f.duration, f.rating_id
+                    FROM films f
+                    JOIN likes l_sim ON f.id = l_sim.film_id
+                    WHERE l_sim.user_id = :similarUserId
+                    AND f.id NOT IN (
+                        SELECT film_id FROM likes WHERE user_id = :userId
+                    )
+                """;
 
-        List<Film> recommendations = jdbcTemplate.query(sql, FilmDbStorage::mapRowToFilm, userId, userId);
+        List<User> similarUsers = jdbc.query(FIND_COMMON_LIKES_USERS, this::mapRowToUser);
 
-        recommendations.forEach(film -> {
-            loadLikesToFilm(film);
-            loadDirectorsAndGenresToFilm(film);
-        });
+        if (similarUsers.isEmpty()) {
+            log.info("Похожих пользователей не найдено для пользователя с id={}", userId);
+            return Collections.emptyList();
+        }
 
-        return recommendations;
+        Long similarUserId = similarUsers.get(0).getId();
+        MapSqlParameterSource parameterSource = new MapSqlParameterSource().addValue("similarUserId", similarUserId).addValue("userId", userId);
+
+        List<Film> films = jdbc.query(RECOMMENDATION_QUERY, parameterSource, FilmDbStorage::mapRowToFilm);
+        films.forEach(this::loadDirectorsAndGenresToFilm);
+        films.forEach(this::loadLikesToFilm);
+        return films;
+    }
+
+    private User mapRowToUser(ResultSet resultSet, int rowNum) throws SQLException {
+        return User.builder()
+                .id(resultSet.getLong("user_id"))
+                .email(resultSet.getString("email"))
+                .login(resultSet.getString("login"))
+                .name(resultSet.getString("name"))
+                .birthday(LocalDate.parse(resultSet.getString("birthday")))
+                .build();
     }
 
     @Override

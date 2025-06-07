@@ -36,5 +36,5 @@ public interface FilmStorage {
 
     Collection<Film> getFilmsByDirectorId(int directorId);
 
-    Collection<Film> getLikedFilms(long userId);
+    Collection<Film> getLikedFilms(Long userId);
 }
