@@ -152,14 +152,14 @@ public class UserDbStorage implements UserStorage {
     public List<User> findSimilarUsers(Long userId) {
         final String FIND_COMMON_LIKES_USERS = """
                     SELECT u.user_id
-                    FROM likes l1
-                    JOIN likes l2 ON l1.film_id = l2.film_id
-                    JOIN users u ON l2.user_id = u.id
-                    WHERE l1.user_id = :user_id
-                    AND u.user_id != :user_id
-                    GROUP BY u.user_id
-                    ORDER BY COUNT(*) DESC
-                    LIMIT 10
+                        FROM likes l1
+                        JOIN likes l2 ON l1.film_id = l2.film_id
+                        JOIN users u ON l2.user_id = u.user_id
+                        WHERE l1.user_id = :user_id
+                          AND u.user_id != :user_id
+                        GROUP BY u.user_id
+                        ORDER BY COUNT(*) DESC
+                        LIMIT 10
                 """;
 
         return jdbc.query(FIND_COMMON_LIKES_USERS, new MapSqlParameterSource("user_id", userId), this::mapRowToUser);
