@@ -334,12 +334,9 @@ public class FilmDbStorage implements FilmStorage {
             FROM OtherUserIntersections
             WHERE common_count = (SELECT MAX(common_count) FROM OtherUserIntersections)
         )
-        SELECT DISTINCT f.*, mpa.name AS mpa_rating_name,
-               genres.genre_id, genres.name AS genre_name
+        SELECT DISTINCT f.*, mpa.name AS mpa_rating_name
         FROM likes l
         JOIN films f ON l.film_id = f.film_id
-        LEFT JOIN film_genres fg ON f.film_id = fg.film_id
-        LEFT JOIN genres ON fg.genre_id = genres.genre_id
         LEFT JOIN mpa_rating mpa ON f.rating_id = mpa.rating_id
         WHERE l.user_id IN (SELECT user_id FROM MaxCommonUsers)
           AND l.film_id NOT IN (SELECT film_id FROM UserLikes)
@@ -347,7 +344,6 @@ public class FilmDbStorage implements FilmStorage {
 
         List<Film> recommendations = jdbcTemplate.query(sql, FilmDbStorage::mapRowToFilm, userId, userId);
 
-        // Загружаем дополнительные данные, если нужно
         recommendations.forEach(film -> {
             loadLikesToFilm(film);
             loadDirectorsAndGenresToFilm(film);
