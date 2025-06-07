@@ -323,7 +323,7 @@ public class FilmDbStorage implements FilmStorage {
                           AND f.film_id NOT IN (
                             SELECT film_id FROM likes WHERE user_id = :userId
                           )
-                """;
+                """.stripIndent();
 
         MapSqlParameterSource pr = new MapSqlParameterSource()
                 .addValue("simId", similarUserId)
