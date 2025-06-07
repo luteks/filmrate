@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
+import javax.annotation.Nonnegative;
 import java.util.List;
 
 @RestController
@@ -30,8 +31,8 @@ public class FilmRatingsController {
     }
 
     @GetMapping("/popular")
-    public List<Film> topFilms(@RequestParam(defaultValue = "10") int count,
-                               @RequestParam(required = false) Integer genreId,
+    public List<Film> topFilms(@RequestParam(defaultValue = "10") @Nonnegative int count,
+                               @RequestParam(required = false) Long genreId,
                                @RequestParam(required = false) Integer year) {
         return filmService.getTopFilms(count, genreId, year);
     }

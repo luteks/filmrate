@@ -12,7 +12,6 @@ import java.util.Collection;
 
 @RestController
 @RequestMapping("/reviews")
-@Slf4j
 @RequiredArgsConstructor
 public class ReviewController {
     private final ReviewService reviewService;

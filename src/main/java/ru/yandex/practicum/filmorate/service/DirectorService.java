@@ -22,7 +22,7 @@ public class DirectorService {
 
     public Director findById(int id) {
         log.info("поиск по id{}", id);
-        return validateDirector(id);
+        return getDirectorOrThrow(id);
     }
 
     public Director create(Director director) {
@@ -31,7 +31,7 @@ public class DirectorService {
     }
 
     public Director update(Director director) {
-        validateDirector(director.getId());
+        getDirectorOrThrow(director.getId());
         log.info("обновление режиссера{}", director);
         return directorStorage.update(director);
     }
@@ -47,7 +47,7 @@ public class DirectorService {
         log.info("Таблица director была очищена");
     }
 
-    private Director validateDirector(Integer directorId) {
+    private Director getDirectorOrThrow(Integer directorId) {
         if (!directorStorage.isDirectorExist(directorId)) {
             log.error("Режиссер c id:{} не найден", directorId);
             throw new NotFoundException("Режиссер c id: " + directorId + " не найден");

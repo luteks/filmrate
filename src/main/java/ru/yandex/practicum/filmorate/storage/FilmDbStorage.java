@@ -218,7 +218,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> getTopFilms(Integer count, Integer genId, Integer year) {
+    public Collection<Film> getTopFilms(Integer count, Long genId, Integer year) {
         String sql = """
         SELECT f.*,
                mpa.name AS mpa_rating_name,
@@ -318,18 +318,42 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Collection<Film> getLikedFilms(long userId) {
-        final String FIND_LIKED_FILMS_BY_USER_ID = "SELECT f.*, mpa.name AS mpa_rating_name, genres.genre_id, genres.name AS genre_name " +
-                "FROM films AS f " + "LEFT JOIN mpa_rating AS mpa ON f.rating_id = mpa.rating_id " +
-                "LEFT JOIN film_genres AS fg ON f.film_id = fg.film_id " +
-                "LEFT JOIN genres ON fg.genre_id = genres.genre_id " +
-                "LEFT JOIN likes AS l ON f.film_id = l.film_id " +
-                "WHERE l.user_id=?";
-        List<Film> likedFilms = jdbcTemplate.query(FIND_LIKED_FILMS_BY_USER_ID, FilmDbStorage::mapRowToFilm, userId);
-        likedFilms.forEach(film -> {
+        String sql = """
+        WITH UserLikes AS (
+            SELECT film_id FROM likes WHERE user_id = ?
+        ),
+        OtherUserIntersections AS (
+            SELECT l.user_id, COUNT(*) AS common_count
+            FROM likes l
+            JOIN UserLikes ul ON l.film_id = ul.film_id
+            WHERE l.user_id != ?
+            GROUP BY l.user_id
+        ),
+        MaxCommonUsers AS (
+            SELECT user_id
+            FROM OtherUserIntersections
+            WHERE common_count = (SELECT MAX(common_count) FROM OtherUserIntersections)
+        )
+        SELECT DISTINCT f.*, mpa.name AS mpa_rating_name,
+               genres.genre_id, genres.name AS genre_name
+        FROM likes l
+        JOIN films f ON l.film_id = f.film_id
+        LEFT JOIN film_genres fg ON f.film_id = fg.film_id
+        LEFT JOIN genres ON fg.genre_id = genres.genre_id
+        LEFT JOIN mpa_rating mpa ON f.rating_id = mpa.rating_id
+        WHERE l.user_id IN (SELECT user_id FROM MaxCommonUsers)
+          AND l.film_id NOT IN (SELECT film_id FROM UserLikes)
+        """;
+
+        List<Film> recommendations = jdbcTemplate.query(sql, FilmDbStorage::mapRowToFilm, userId, userId);
+
+        // Загружаем дополнительные данные, если нужно
+        recommendations.forEach(film -> {
             loadLikesToFilm(film);
             loadDirectorsAndGenresToFilm(film);
         });
-        return likedFilms;
+
+        return recommendations;
     }
 
     @Override

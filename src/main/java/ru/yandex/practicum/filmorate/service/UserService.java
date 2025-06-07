@@ -60,9 +60,7 @@ public class UserService {
         userStorage.addFriend(userId, friendId);
         log.info("{} и {} теперь друзья!", userId, friendId);
 
-        feedStorage.addEventToFeed(userId, EventType.FRIEND, Operation.ADD, friendId);
-        log.info("Событие добавлено в ленту: пользовател с id: {} добавил друга с id: {}", userId, friendId);
-
+        addEventToFeed(userId, friendId, Operation.ADD);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
@@ -74,8 +72,12 @@ public class UserService {
         userStorage.deleteFriend(userId, friendId);
         log.info("{} и {} больше не друзья!", userId, friendId);
 
-        feedStorage.addEventToFeed(userId, EventType.FRIEND, Operation.REMOVE, friendId);
-        log.info("Событие добавлено в ленту: пользовател с id: {} удалил друга с id: {}", userId, friendId);
+        addEventToFeed(userId, friendId, Operation.REMOVE);
+    }
+
+    private void addEventToFeed(Long userId, Long friendId, Operation operation) {
+        feedStorage.addEventToFeed(userId, EventType.FRIEND, operation, friendId);
+        log.info("Событие добавлено в ленту: пользователь с id: {} {} друга с id: {}", userId, operation, friendId);
     }
 
     public List<User> commonFriends(Long userId, Long friendId) {
