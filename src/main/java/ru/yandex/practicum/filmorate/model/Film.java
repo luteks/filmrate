@@ -4,17 +4,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import ru.yandex.practicum.filmorate.validator.AfterFilmBirth;
 
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import ru.yandex.practicum.filmorate.validator.AfterFilmBirth;
 
 @Data
 @Builder(toBuilder = true)
@@ -37,9 +35,10 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     int duration;
 
-    private final Set<Long> likes = new HashSet<>();
+    private Set<Long> likes;
     private Mpa mpa;
     private final Set<Genre> genres = new HashSet<>();
+    private Set<Director> directors;
 
     public Map<String, Object> toMap() {
         Map<String, Object> values = new HashMap<>();
@@ -50,5 +49,10 @@ public class Film {
         values.put("duration", duration);
         values.put("rating_id", mpa == null ? null : mpa.getId());
         return values;
+    }
+
+    public void addGenres(Set<Genre> genres) {
+        this.genres.clear();
+        this.genres.addAll(genres);
     }
 }

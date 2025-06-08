@@ -21,7 +21,7 @@ public class MpaService {
         return mpaStorage.findAll();
     }
 
-    public Mpa getMpa(int mpaId) {
+    public Mpa getMpa(Long mpaId) {
         if (!mpaStorage.isMpaExists(mpaId)) {
             log.error("Рейтинг с id={} не найден", mpaId);
             throw new NotFoundException("Рейтинг с id=" + mpaId + " не найден");
@@ -30,4 +30,5 @@ public class MpaService {
         log.info("Возвращен рейтинг {}", mpaId);
         return mpaStorage.getMpaById(mpaId);
     }
+
 }
